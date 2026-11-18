@@ -55,6 +55,31 @@
   font-family: var(--font-dm-sans), sans-serif;
 }
 
+/* Specular Shimmer Sheen Animation */
+@keyframes textShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.animate-shimmer-sweep {
+  background: linear-gradient(
+    90deg,
+    #F0F0ED 0%,
+    #A1A1A1 25%,
+    #FFFFFF 50%,
+    #A1A1A1 75%,
+    #F0F0ED 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 6s linear infinite;
+}
+
 /* Subtle Film Grain Texture Overlay */
 .film-grain {
   position: fixed;

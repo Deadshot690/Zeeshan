@@ -34,16 +34,32 @@ export default function About() {
           {/* Left Column: Editorial Bio, Experience & Education */}
           <div className="lg:col-span-7 flex flex-col gap-10">
             <div>
-              <div className="flex items-center gap-2 font-mono-tech text-xs text-[#777777] uppercase tracking-widest mb-3">
+              <div className="flex flex-wrap items-center gap-2 font-mono-tech text-xs text-[#777777] uppercase tracking-widest mb-3">
+                <span className="relative flex h-2 w-2 mr-1">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/40 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                </span>
                 <MapPin className="w-3.5 h-3.5 text-[#F0F0ED]" />
                 <span>MUMBAI, MAHARASHTRA, INDIA</span>
+                <span className="text-[#444444]">//</span>
+                <span className="text-[#888888]">{siteConfig.coordinates}</span>
               </div>
-              <h3 className="font-serif-editorial text-3xl sm:text-4xl text-[#F0F0ED] italic font-light mb-2">
-                {siteConfig.brandName}
-              </h3>
-              <p className="font-mono-tech text-xs tracking-[0.2em] uppercase text-[#A1A1A1]">
-                {siteConfig.role}
-              </p>
+
+              {/* Elevated Modern Editorial Brand Name with Metallic Shimmer Sheen */}
+              <div className="group relative inline-block mb-3">
+                <h3 className="font-sans-body font-black text-2xl sm:text-3xl md:text-[2.35rem] lg:text-[2.65rem] tracking-tight uppercase leading-[1.08] select-none">
+                  <span className="animate-shimmer-sweep inline-block font-black tracking-tight">
+                    {siteConfig.brandName}
+                  </span>
+                </h3>
+                {/* Dynamic Specular Hover Underline Accent */}
+                <div className="h-[2px] w-14 bg-gradient-to-r from-white via-white/60 to-transparent rounded-full group-hover:w-full transition-all duration-500 ease-out mt-1.5" />
+              </div>
+
+              <div className="flex items-center gap-2 font-mono-tech text-xs tracking-[0.2em] uppercase text-[#A1A1A1]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80 animate-pulse" />
+                <span>{siteConfig.role}</span>
+              </div>
             </div>
 
             {/* Verbatim About Copy */}
@@ -125,12 +141,14 @@ export default function About() {
               <div className="corner-bracket corner-bl !bottom-3 !left-3" />
               <div className="corner-bracket corner-br !bottom-3 !right-3" />
 
-              {/* Monochrome Editorial Portrait Image */}
+              {/* Authentic Editorial Portrait of Mohammad Zeeshan */}
               <Image
-                src="/assets/branding/portrait.jpg"
-                alt="Mohammad Zeeshan Rafik Shaikh Portrait Art Direction"
+                src="/assets/branding/zeeshan.jpg"
+                alt="Mohammad Zeeshan Rafik Shaikh Portrait"
                 fill
-                className="object-cover filter grayscale contrast-125 brightness-95 group-hover:scale-105 transition-transform duration-700"
+                priority
+                className="object-cover object-[center_20%] filter grayscale contrast-[1.25] brightness-[0.95] group-hover:scale-105 group-hover:contrast-[1.3] transition-all duration-700 ease-out"
+                sizes="(max-width: 768px) 100vw, 40vw"
               />
 
               {/* Vignette Overlay */}
