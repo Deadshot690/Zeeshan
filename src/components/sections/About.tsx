@@ -13,13 +13,12 @@ gsap.registerPlugin(ScrollTrigger);
 export default function About() {
   const { scrollTo } = useSmoothScroll();
   const sectionRef = useRef<HTMLElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const portraitColRef = useRef<HTMLDivElement>(null);
-  
+
   // Parallax layer refs
   const layer1Ref = useRef<HTMLDivElement>(null);
   const layer2Ref = useRef<HTMLDivElement>(null);
-  const layer3Ref = useRef<HTMLDivElement>(null);
   const portraitFrameRef = useRef<HTMLDivElement>(null);
 
   // Modal State for Expanded Dossier
@@ -30,13 +29,13 @@ export default function About() {
 
   // Master GSAP ScrollTrigger Entrance Animation
   useEffect(() => {
-    if (!sectionRef.current || !cardRef.current) return;
+    if (!sectionRef.current || !containerRef.current) return;
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const ctx = gsap.context(() => {
       if (prefersReducedMotion) {
-        gsap.to(cardRef.current, { opacity: 1, duration: 0.6 });
+        gsap.to(containerRef.current, { opacity: 1, duration: 0.6 });
         return;
       }
 
@@ -49,157 +48,138 @@ export default function About() {
         defaults: { ease: 'power3.out' },
       });
 
-      // 1. Reveal outer container card
+      // 1. Reveal dedicated section header above container
       tl.fromTo(
-        cardRef.current,
-        { opacity: 0, y: 40, scale: 0.98 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.9, clearProps: 'transform' }
+        '.about-section-header',
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.5, clearProps: 'all' }
       );
 
-      // 2. Reveal section counter (07 /11 + vertical accent line)
+      // 2. Reveal main container frame
+      tl.fromTo(
+        containerRef.current,
+        { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.8, clearProps: 'transform' },
+        '-=0.3'
+      );
+
+      // 3. Reveal section counter (07 /11 + vertical accent line)
       tl.fromTo(
         '.about-counter',
-        { opacity: 0, y: -12 },
-        { opacity: 1, y: 0, duration: 0.6 },
+        { opacity: 0, y: -8 },
+        { opacity: 1, y: 0, duration: 0.5, clearProps: 'all' },
         '-=0.5'
       );
 
-      // 3. Reveal top-right interactive arrow
+      // 4. Reveal top-right bare arrow
       tl.fromTo(
-        '.about-arrow-btn',
-        { opacity: 0, scale: 0.7 },
-        { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.8)' },
+        '.about-arrow-icon',
+        { opacity: 0, x: -6, y: 6 },
+        { opacity: 1, x: 0, y: 0, duration: 0.5, ease: 'power2.out', clearProps: 'all' },
         '-=0.5'
       );
 
-      // 4. Reveal layered background panels (staggered depth)
+      // 5. Reveal layered background rectangles
       tl.fromTo(
-        ['.about-layer-1', '.about-layer-2', '.about-layer-3'],
-        { opacity: 0, scale: 0.92 },
-        { opacity: 1, scale: 1, duration: 0.8, stagger: 0.12, ease: 'power2.out' },
-        '-=0.6'
+        ['.about-layer-1', '.about-layer-2'],
+        { opacity: 0, scale: 0.94 },
+        { opacity: 1, scale: 1, duration: 0.7, stagger: 0.1, ease: 'power2.out', clearProps: 'transform' },
+        '-=0.5'
       );
 
-      // 5. Reveal main portrait with smooth vertical clip-path reveal
+      // 6. Reveal main portrait with smooth vertical clip-path
       tl.fromTo(
         '.about-portrait-frame',
-        { clipPath: 'inset(100% 0 0 0)', scale: 1.06, opacity: 0 },
+        { clipPath: 'inset(100% 0 0 0)', scale: 1.04, opacity: 0 },
         {
           clipPath: 'inset(0% 0 0 0)',
           scale: 1,
           opacity: 1,
-          duration: 1.1,
+          duration: 1.0,
           ease: 'power3.inOut',
           clearProps: 'clipPath,transform',
         },
-        '-=0.7'
-      );
-
-      // 6. Reveal Heading lines with mask
-      tl.fromTo(
-        '.about-heading-line',
-        { yPercent: 105, opacity: 0 },
-        { yPercent: 0, opacity: 1, duration: 0.85, stagger: 0.1, ease: 'power4.out', clearProps: 'transform' },
-        '-=0.8'
-      );
-
-      // 7. Reveal Professional Role
-      tl.fromTo(
-        '.about-role',
-        { y: 16, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out', clearProps: 'transform' },
         '-=0.6'
       );
 
-      // 8. Reveal Biography
+      // 7. Reveal Heading lines
       tl.fromTo(
-        '.about-bio',
-        { y: 16, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out', clearProps: 'transform' },
+        '.about-heading-line',
+        { yPercent: 100, opacity: 0 },
+        { yPercent: 0, opacity: 1, duration: 0.8, stagger: 0.08, ease: 'power4.out', clearProps: 'transform' },
+        '-=0.7'
+      );
+
+      // 8. Reveal Role
+      tl.fromTo(
+        '.about-role',
+        { y: 14, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out', clearProps: 'transform' },
         '-=0.5'
       );
 
-      // 9. Reveal Skill Tags sequentially
+      // 9. Reveal Biography
+      tl.fromTo(
+        '.about-bio',
+        { y: 14, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out', clearProps: 'transform' },
+        '-=0.45'
+      );
+
+      // 10. Reveal Skill Tags sequentially
       tl.fromTo(
         '.about-skill-tag',
-        { y: 14, opacity: 0, scale: 0.94 },
+        { y: 12, opacity: 0, scale: 0.95 },
         {
           y: 0,
           opacity: 1,
           scale: 1,
-          duration: 0.55,
-          stagger: 0.08,
+          duration: 0.5,
+          stagger: 0.06,
           ease: 'back.out(1.5)',
           clearProps: 'transform',
         },
-        '-=0.4'
+        '-=0.35'
       );
-
-      // Scroll-based subtle ambient parallax on the portrait column
-      gsap.to(portraitColRef.current, {
-        yPercent: -4,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top bottom',
-          end: 'bottom top',
-          scrub: 1.2,
-        },
-      });
     }, sectionRef);
 
     return () => ctx.revert();
   }, []);
 
-  // Cursor-driven Parallax Interaction on the Layered Portrait Composition (Desktop Only)
+  // Subtle Parallax Interaction on Layered Composition (Desktop Only)
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (window.innerWidth < 1024) return;
     if (!portraitColRef.current) return;
 
     const rect = portraitColRef.current.getBoundingClientRect();
-    // Normalize coordinates: -1 to 1 relative to center
     const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
     const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
 
-    // Shift main portrait subtly
     if (portraitFrameRef.current) {
       gsap.to(portraitFrameRef.current, {
-        x: x * 8,
-        y: y * 8,
+        x: x * 6,
+        y: y * 6,
+        duration: 0.5,
+        ease: 'power2.out',
+        overwrite: 'auto',
+      });
+    }
+
+    if (layer1Ref.current) {
+      gsap.to(layer1Ref.current, {
+        x: x * -10,
+        y: y * -8,
         duration: 0.6,
         ease: 'power2.out',
         overwrite: 'auto',
       });
     }
 
-    // Shift Layer 1 (Leftmost offset pane) with greater inverse parallax
-    if (layer1Ref.current) {
-      gsap.to(layer1Ref.current, {
-        x: x * -14,
-        y: y * -12,
-        duration: 0.7,
-        ease: 'power2.out',
-        overwrite: 'auto',
-      });
-    }
-
-    // Shift Layer 2 (Center-back pane) with intermediate parallax
     if (layer2Ref.current) {
       gsap.to(layer2Ref.current, {
-        x: x * -6,
-        y: y * -6,
-        duration: 0.65,
-        ease: 'power2.out',
-        overwrite: 'auto',
-      });
-    }
-
-    // Shift Layer 3 (Top-right accent tile) with forward parallax
-    if (layer3Ref.current) {
-      gsap.to(layer3Ref.current, {
-        x: x * 10,
-        y: y * 10,
-        duration: 0.75,
+        x: x * -5,
+        y: y * -4,
+        duration: 0.55,
         ease: 'power2.out',
         overwrite: 'auto',
       });
@@ -209,17 +189,11 @@ export default function About() {
   const handleMouseLeave = useCallback(() => {
     if (window.innerWidth < 1024) return;
 
-    const elements = [
-      portraitFrameRef.current,
-      layer1Ref.current,
-      layer2Ref.current,
-      layer3Ref.current,
-    ];
-
+    const elements = [portraitFrameRef.current, layer1Ref.current, layer2Ref.current];
     gsap.to(elements, {
       x: 0,
       y: 0,
-      duration: 0.8,
+      duration: 0.7,
       ease: 'power2.out',
       overwrite: 'auto',
     });
@@ -253,123 +227,130 @@ export default function About() {
     <section
       ref={sectionRef}
       id="about"
-      className="relative z-10 w-full py-20 sm:py-24 lg:py-32 px-4 sm:px-8 lg:px-12 bg-[#080808] overflow-hidden"
+      className="relative z-10 w-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-[#080808] overflow-hidden"
     >
-      <div className="max-w-6xl mx-auto">
-        {/* Main Section Container: Exact Reference Proportions & Editorial Aesthetic */}
-        <div
-          ref={cardRef}
-          className="about-card-container relative w-full rounded-2xl sm:rounded-3xl lg:rounded-[32px] border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-10 lg:p-14 xl:p-16 overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.85)]"
-        >
-          {/* Subtle Ambient Grain & Dark Gradient Depth */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] via-transparent to-black pointer-events-none" />
+      <div className="w-full max-w-[1360px] mx-auto">
+        {/* ==================================================== */}
+        {/* 2. DEDICATED SECTION HEADER (ABOVE MAIN CANVAS)      */}
+        {/* ==================================================== */}
+        <div className="about-section-header flex items-center gap-3 mb-4 sm:mb-5 select-none">
+          <div className="px-2.5 py-0.5 rounded border border-white/20 bg-white/[0.04] font-mono-tech text-xs font-bold text-white tracking-wider">
+            09
+          </div>
+          <h3 className="font-sans-body font-medium text-sm sm:text-base text-white tracking-wider uppercase">
+            About the Editor
+          </h3>
+        </div>
 
-          {/* Section Counter: 07 /11 with vertical line (Matching Reference) */}
-          <div className="about-counter absolute top-6 sm:top-10 left-6 sm:left-10 lg:top-12 lg:left-12 z-20 flex flex-col items-start font-mono-tech select-none">
+        {/* ==================================================== */}
+        {/* 3. MAIN WIDE CONTAINER CANVAS                        */}
+        {/* ==================================================== */}
+        <div
+          ref={containerRef}
+          className="relative w-full rounded-xl sm:rounded-2xl border border-white/10 bg-[#070709] p-6 sm:p-8 lg:p-10 xl:p-12 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
+        >
+          {/* Top-Left Section Counter: 07 /11 with subtle vertical line */}
+          <div className="about-counter absolute top-6 left-6 sm:top-8 sm:left-8 z-20 flex flex-col items-start font-mono-tech select-none">
             <div className="flex items-baseline gap-0.5">
-              <span className="text-sm sm:text-base font-bold text-white tracking-wider">07</span>
-              <span className="text-xs text-[#777777]">/11</span>
+              <span className="text-xs sm:text-sm font-bold text-white tracking-wider">07</span>
+              <span className="text-[11px] sm:text-xs text-[#777777]">/11</span>
             </div>
-            <div className="w-[1px] h-6 sm:h-8 bg-white/20 mt-1.5 ml-1" />
+            <div className="w-[1px] h-5 sm:h-6 bg-white/20 mt-1.5 ml-1" />
           </div>
 
-          {/* Top-Right Interactive Diagonal Arrow (Opens Detailed Editorial Dossier) */}
+          {/* Top-Right Bare Diagonal Arrow (Minimal & White, No Circular Background) */}
           <button
             onClick={() => setIsModalOpen(true)}
             aria-label="Expand detailed profile and credentials"
-            className="about-arrow-btn absolute top-6 sm:top-10 right-6 sm:right-10 lg:top-12 lg:right-12 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-white/10 bg-white/[0.03] hover:border-white/40 hover:bg-white/[0.08] flex items-center justify-center text-white/70 hover:text-white transition-all duration-300 group cursor-pointer"
+            className="about-arrow-icon absolute top-6 right-6 sm:top-8 sm:right-8 z-20 text-white/70 hover:text-white transition-all duration-300 group cursor-pointer p-1"
           >
-            <ArrowUpRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:scale-110" />
+            <ArrowUpRight className="w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110" />
           </button>
 
-          {/* Main Two-Column Composition: Left Image ~55%, Right Content ~45% */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 xl:gap-12 items-center pt-10 sm:pt-12 lg:pt-4">
-            {/* ==================================================== */}
-            {/* LEFT COLUMN: Layered Editorial Monochrome Portrait   */}
-            {/* ==================================================== */}
+          {/* ==================================================== */}
+          {/* 4. EXACT TWO-COLUMN COMPOSITION: Left 55% / Right 45% */}
+          {/* ==================================================== */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-14 items-center pt-8 sm:pt-10 lg:pt-2">
+            {/* ---------------------------------------------------- */}
+            {/* LEFT COLUMN (~55%): SUBSTANTIALLY LARGER PORTRAIT    */}
+            {/* ---------------------------------------------------- */}
             <div
               ref={portraitColRef}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
-              className="lg:col-span-7 relative flex items-center justify-center min-h-[360px] sm:min-h-[440px] lg:min-h-[480px] xl:min-h-[520px] select-none"
+              className="lg:col-span-7 relative flex items-center justify-center min-h-[420px] sm:min-h-[500px] lg:min-h-[540px] xl:min-h-[580px] select-none"
             >
-              {/* Layer 1: Leftmost Offset Vertical Rectangular Glass Pane */}
+              {/* LAYER 1 — Background Muted Rectangle Offset Towards Left */}
               <div
                 ref={layer1Ref}
-                className="about-layer-1 absolute w-28 sm:w-36 lg:w-40 h-52 sm:h-64 lg:h-72 border border-white/10 bg-gradient-to-b from-white/[0.06] via-white/[0.02] to-transparent backdrop-blur-[2px] rounded-sm pointer-events-none z-0 transform -translate-x-20 sm:-translate-x-28 lg:-translate-x-32"
+                className="about-layer-1 absolute w-[68%] sm:w-[72%] h-[78%] sm:h-[82%] border border-white/10 bg-white/[0.02] backdrop-blur-[2px] rounded-sm pointer-events-none z-0 transform -translate-x-16 sm:-translate-x-24 lg:-translate-x-28 translate-y-4 sm:translate-y-6"
               />
 
-              {/* Layer 2: Center-Rear Architectural Translucent Panel Behind Head */}
+              {/* LAYER 2 — Second Overlay Panel Offset Horizontally */}
               <div
                 ref={layer2Ref}
-                className="about-layer-2 absolute w-60 sm:w-72 lg:w-80 h-60 sm:h-72 lg:h-80 border border-white/[0.12] bg-white/[0.02] backdrop-blur-[3px] rounded-sm pointer-events-none z-0 transform -translate-y-6 sm:-translate-y-8"
+                className="about-layer-2 absolute w-[64%] sm:w-[68%] h-[74%] sm:h-[78%] border border-white/10 bg-gradient-to-b from-white/[0.05] via-white/[0.02] to-transparent backdrop-blur-[2px] rounded-sm pointer-events-none z-0 transform translate-x-12 sm:translate-x-16 lg:translate-x-20 -translate-y-8 sm:-translate-y-10"
               />
 
-              {/* Layer 3: Top-Right Subtle Accent Glass Tile */}
-              <div
-                ref={layer3Ref}
-                className="about-layer-3 absolute w-28 sm:w-36 lg:w-40 h-28 sm:h-36 lg:h-40 border border-white/[0.08] bg-white/[0.03] backdrop-blur-[2px] rounded-sm pointer-events-none z-0 transform translate-x-20 sm:translate-x-28 lg:translate-x-32 -translate-y-16 sm:-translate-y-20 hidden sm:block"
-              />
-
-              {/* Layer 4: Dominant Monochrome Portrait of Mohammad Zeeshan */}
+              {/* LAYER 3 — Main Sharp Dominant Portrait (Occupies 75-82% container height) */}
               <div
                 ref={portraitFrameRef}
-                className="about-portrait-frame relative w-[260px] sm:w-[320px] lg:w-[350px] xl:w-[380px] h-[340px] sm:h-[420px] lg:h-[460px] xl:h-[490px] rounded-sm overflow-hidden border border-white/20 bg-[#0a0a0c] z-10 shadow-[0_25px_60px_rgba(0,0,0,0.9)] group"
+                className="about-portrait-frame relative w-[82%] sm:w-[85%] lg:w-[88%] max-w-[480px] h-[400px] sm:h-[480px] lg:h-[530px] xl:h-[560px] rounded-sm overflow-hidden border border-white/20 bg-[#0a0a0c] z-10 shadow-[0_25px_60px_rgba(0,0,0,0.9)] group"
               >
-                {/* Authentic High-Contrast Monochrome Portrait Asset */}
+                {/* Authentic Actual Portrait Asset */}
                 <Image
                   src="/assets/branding/portrait.jpg"
                   alt="Mohammad Zeeshan — Video Editor & Visual Storyteller"
                   fill
                   priority
-                  className="object-cover object-[center_28%] filter grayscale contrast-[1.35] brightness-[0.92] transition-transform duration-700 ease-out group-hover:scale-105"
-                  sizes="(max-width: 768px) 90vw, 40vw"
+                  className="object-cover object-[center_25%] filter grayscale contrast-[1.35] brightness-[0.92] transition-transform duration-700 ease-out group-hover:scale-105"
+                  sizes="(max-width: 768px) 95vw, 50vw"
                 />
 
-                {/* Cinematic Vignette & Bottom Edge Blend */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0e] via-transparent to-transparent opacity-90 pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20 pointer-events-none" />
+                {/* Subtle Cinematic Vignette */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-transparent to-transparent opacity-85 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/25 pointer-events-none" />
 
                 {/* Subtle Viewfinder Framing Marks */}
-                <div className="corner-bracket corner-tl !top-3 !left-3 !w-2 !h-2 opacity-60" />
-                <div className="corner-bracket corner-br !bottom-3 !right-3 !w-2 !h-2 opacity-60" />
+                <div className="corner-bracket corner-tl !top-3 !left-3 !w-2 !h-2 opacity-50" />
+                <div className="corner-bracket corner-br !bottom-3 !right-3 !w-2 !h-2 opacity-50" />
               </div>
             </div>
 
-            {/* ==================================================== */}
-            {/* RIGHT COLUMN: Editorial Typography & Skill Tags     */}
-            {/* ==================================================== */}
+            {/* ---------------------------------------------------- */}
+            {/* RIGHT COLUMN (~45%): EDITORIAL CONTENT & SKILL TAGS  */}
+            {/* ---------------------------------------------------- */}
             <div className="lg:col-span-5 flex flex-col justify-center text-left">
-              {/* Main Heading: ABOUT \n MOHAMMAD ZEESHAN (Condensed Bold Display) */}
-              <div className="overflow-hidden mb-2">
-                <span className="about-heading-line block font-sans-body font-black text-3xl sm:text-5xl lg:text-[2.75rem] xl:text-[3.25rem] leading-[0.95] text-white tracking-tight uppercase">
+              {/* Main Heading: ABOUT \n MOHAMMAD ZEESHAN (Condensed Display Font) */}
+              <div className="overflow-hidden mb-1">
+                <span className="about-heading-line block font-condensed-heading font-black text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-[3.75rem] leading-[0.92] text-white tracking-normal uppercase">
                   ABOUT
                 </span>
-                <span className="about-heading-line block font-sans-body font-black text-3xl sm:text-5xl lg:text-[2.75rem] xl:text-[3.25rem] leading-[0.95] text-white tracking-tight uppercase mt-1">
+                <span className="about-heading-line block font-condensed-heading font-black text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-[3.75rem] leading-[0.92] text-white tracking-normal uppercase mt-1">
                   MOHAMMAD ZEESHAN
                 </span>
               </div>
 
               {/* Professional Role / Identity */}
               <div className="about-role mt-4 sm:mt-5">
-                <p className="font-sans-body text-base sm:text-lg text-[#E0E0E0] font-normal leading-snug tracking-wide">
+                <p className="font-sans-body text-base sm:text-lg text-[#D4D4D0] font-normal leading-snug tracking-wide">
                   Video Editor / Motion Designer /<br className="hidden sm:inline" /> Visual Storyteller
                 </p>
               </div>
 
-              {/* Biography: Exact Professional Introduction (2-3 Lines on Desktop) */}
+              {/* Concise Biography (2-3 Lines on Desktop) */}
               <div className="about-bio mt-4 sm:mt-5 max-w-md">
-                <p className="font-sans-body text-sm sm:text-base text-[#A1A1A1] leading-relaxed font-light">
+                <p className="font-sans-body text-sm sm:text-base text-[#999999] leading-relaxed font-light">
                   A creative video editor focused on crafting emotionally driven, visually compelling stories through editing, motion and sound.
                 </p>
               </div>
 
-              {/* Creative Skill Tags: 4 Outlined Pill Badges (EDITING, MOTION, COLOR, VFX) */}
+              {/* Creative Skill Tags (4 Outlined Pill Badges) */}
               <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mt-8 sm:mt-10">
                 {skillTags.map((tag) => (
                   <span
                     key={tag}
-                    className="about-skill-tag px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/20 bg-white/[0.03] text-[#F0F0ED] font-mono-tech text-xs tracking-widest uppercase transition-all duration-300 hover:border-white/60 hover:bg-white/[0.08] hover:text-white hover:-translate-y-0.5 cursor-default select-none shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+                    className="about-skill-tag px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/20 bg-white/[0.02] text-[#F0F0ED] font-mono-tech text-xs tracking-widest uppercase transition-all duration-300 hover:border-white/60 hover:bg-white/[0.08] hover:text-white hover:-translate-y-0.5 cursor-default select-none shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
                   >
                     {tag}
                   </span>
