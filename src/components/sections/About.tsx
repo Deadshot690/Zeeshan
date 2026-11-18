@@ -143,13 +143,13 @@ export default function About() {
               <div className="corner-bracket corner-bl !bottom-3 !left-3" />
               <div className="corner-bracket corner-br !bottom-3 !right-3" />
 
-              {/* Authentic Editorial Portrait of Mohammad Zeeshan (Shifted upward to center face) */}
+              {/* Authentic Editorial Portrait of Mohammad Zeeshan (Balanced framing: hair preserved, face centered) */}
               <Image
                 src="/assets/branding/zeeshan.jpg"
                 alt="Mohammad Zeeshan Rafik Shaikh Portrait"
                 fill
                 priority
-                className="object-cover object-[center_60%] filter grayscale contrast-[1.25] brightness-[0.95] group-hover:scale-105 group-hover:contrast-[1.3] transition-all duration-700 ease-out"
+                className="object-cover object-[center_40%] filter grayscale contrast-[1.25] brightness-[0.95] group-hover:scale-105 group-hover:contrast-[1.3] transition-all duration-700 ease-out"
                 sizes="(max-width: 768px) 100vw, 40vw"
               />
 
