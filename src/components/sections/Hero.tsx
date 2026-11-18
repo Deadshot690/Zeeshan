@@ -1,17 +1,81 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { ArrowDownRight, Compass } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'motion/react';
+import { ArrowDownRight, RotateCcw } from 'lucide-react';
 import Scene from '@/components/three/Scene';
 import MagneticButton from '@/components/motion/MagneticButton';
 import { siteConfig } from '@/data/site';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
+import { soundManager } from '@/lib/sound';
 
 export default function Hero() {
   const { scrollTo } = useSmoothScroll();
   const heroRef = useRef<HTMLElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Scroll animations for 3D depth and parallax
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  });
+
+  const headlineRotateX = useTransform(scrollYProgress, [0, 0.8], [0, -12]);
+  const headlineY = useTransform(scrollYProgress, [0, 1], [0, 100]);
+  const headlineOpacity = useTransform(scrollYProgress, [0, 0.75], [1, 0.2]);
+
+  // Live Typewriter / Write-On State for Hero Headline
+  const heroLines = [
+    { text: 'I TURN', serif: true },
+    { text: 'MOMENTS', serif: false },
+    { text: 'INTO', serif: true },
+    { text: 'MOTION.', serif: false },
+  ];
+
+  const totalHeroChars = heroLines.reduce((acc, l) => acc + l.text.length, 0);
+  const [typedHeroCount, setTypedHeroCount] = useState(0);
+  const [isTyping, setIsTyping] = useState(true);
+
+  const startHeroTyping = () => {
+    setTypedHeroCount(0);
+    setIsTyping(true);
+  };
+
+  useEffect(() => {
+    if (!isTyping) return;
+
+    if (typedHeroCount < totalHeroChars) {
+      const delay = typedHeroCount === 5 || typedHeroCount === 12 || typedHeroCount === 16 ? 90 : 42;
+      const timer = setTimeout(() => {
+        setTypedHeroCount((prev) => {
+          const next = prev + 1;
+          if (next % 3 === 0) {
+            soundManager.playHover();
+          }
+          if (next >= totalHeroChars) {
+            setIsTyping(false);
+          }
+          return next;
+        });
+      }, delay);
+      return () => clearTimeout(timer);
+    }
+  }, [isTyping, typedHeroCount, totalHeroChars]);
+
+  const getLineProgress = (lineIndex: number) => {
+    let charsBefore = 0;
+    for (let i = 0; i < lineIndex; i++) {
+      charsBefore += heroLines[i]!.text.length;
+    }
+    const charsForThisLine = heroLines[lineIndex]!.text.length;
+    const lineCharsTyped = Math.max(0, Math.min(charsForThisLine, typedHeroCount - charsBefore));
+    const isCurrentLine = typedHeroCount >= charsBefore && typedHeroCount < charsBefore + charsForThisLine;
+    return {
+      visibleText: heroLines[lineIndex]!.text.slice(0, lineCharsTyped),
+      isComplete: lineCharsTyped === charsForThisLine,
+      showCursor: isCurrentLine && isTyping,
+    };
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,13 +106,21 @@ export default function Hero() {
       <div className="corner-bracket corner-bl !bottom-8 !left-6 md:!left-12" />
       <div className="corner-bracket corner-br !bottom-8 !right-6 md:!right-12" />
 
-      {/* Top Section Metadata */}
-      <div className="relative z-10 w-full flex items-center justify-between font-mono-tech text-[10px] text-[#777777] tracking-[0.25em] uppercase pointer-events-none">
-        <div className="flex items-center gap-2">
+      {/* Top Section Metadata with Retype Action */}
+      <div className="relative z-10 w-full flex items-center justify-between font-mono-tech text-[10px] text-[#777777] tracking-[0.25em] uppercase pointer-events-auto">
+        <div className="flex items-center gap-3">
           <span className="w-2 h-2 rounded-full bg-emerald-500/80 animate-pulse" />
           <span>REEL // 2026_MASTER</span>
+          <button
+            onClick={startHeroTyping}
+            className="hidden sm:flex items-center gap-1.5 text-[#777777] hover:text-[#F0F0ED] transition-colors py-0.5 px-2 rounded border border-white/10 hover:border-white/30 bg-white/[0.02]"
+            title="Replay write-on animation"
+          >
+            <RotateCcw className="w-2.5 h-2.5" />
+            <span className="text-[8px]">RETYPE</span>
+          </button>
         </div>
-        <div className="hidden sm:flex items-center gap-4">
+        <div className="hidden sm:flex items-center gap-4 pointer-events-none">
           <span>FPS: 24.00</span>
           <span>SHUTTER: 1/48</span>
           <span>ACES COLOR</span>
@@ -58,8 +130,16 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Main Headline & Supporting Typography */}
-      <div className="relative z-10 my-auto py-12 flex flex-col justify-center max-w-5xl pointer-events-none">
+      {/* Main Headline & Supporting Typography with Live Write-On */}
+      <motion.div
+        style={{
+          rotateX: headlineRotateX,
+          y: headlineY,
+          opacity: headlineOpacity,
+          transformPerspective: 1000,
+        }}
+        className="relative z-10 my-auto py-12 flex flex-col justify-center max-w-5xl pointer-events-none"
+      >
         {/* Editorial Subtitle */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -73,28 +153,44 @@ export default function Hero() {
           </p>
         </motion.div>
 
-        {/* Cinematic Headline: I TURN MOMENTS INTO MOTION */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col leading-[0.92] tracking-tighter"
-        >
-          <span className="font-serif-editorial text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] text-[#F0F0ED] italic font-light">
-            I TURN
-          </span>
-          <span className="font-sans-body font-black text-6xl sm:text-8xl md:text-9xl lg:text-[10.5rem] text-[#F0F0ED] uppercase tracking-[-0.04em] pl-1 sm:pl-3">
-            MOMENTS
-          </span>
-          <div className="flex flex-wrap items-baseline gap-4 sm:gap-6">
-            <span className="font-serif-editorial text-5xl sm:text-7xl md:text-8xl lg:text-[9.5rem] text-[#A1A1A1] italic font-light">
-              INTO
+        {/* Cinematic Headline with Live Typewriter: I TURN MOMENTS INTO MOTION */}
+        <div className="flex flex-col leading-[0.92] tracking-tighter">
+          {/* Line 1: I TURN (Serif Italic) */}
+          <div className="min-h-[1em] flex items-baseline">
+            <span className="font-serif-editorial text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] text-[#F0F0ED] italic font-light">
+              {getLineProgress(0).visibleText}
             </span>
-            <span className="font-sans-body font-black text-6xl sm:text-8xl md:text-9xl lg:text-[10.5rem] text-[#F0F0ED] uppercase tracking-[-0.04em]">
-              MOTION.
-            </span>
+            {getLineProgress(0).showCursor && (
+              <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
+            )}
           </div>
-        </motion.div>
+
+          {/* Line 2: MOMENTS (Sans Bold) */}
+          <div className="min-h-[1em] flex items-baseline">
+            <span className="font-sans-body font-black text-6xl sm:text-8xl md:text-9xl lg:text-[10.5rem] text-[#F0F0ED] uppercase tracking-[-0.04em] pl-1 sm:pl-3">
+              {getLineProgress(1).visibleText}
+            </span>
+            {getLineProgress(1).showCursor && (
+              <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
+            )}
+          </div>
+
+          {/* Line 3 & 4: INTO MOTION. */}
+          <div className="flex flex-wrap items-baseline gap-4 sm:gap-6 min-h-[1em]">
+            <span className="font-serif-editorial text-5xl sm:text-7xl md:text-8xl lg:text-[9.5rem] text-[#A1A1A1] italic font-light">
+              {getLineProgress(2).visibleText}
+            </span>
+            {getLineProgress(2).showCursor && (
+              <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
+            )}
+            <span className="font-sans-body font-black text-6xl sm:text-8xl md:text-9xl lg:text-[10.5rem] text-[#F0F0ED] uppercase tracking-[-0.04em]">
+              {getLineProgress(3).visibleText}
+            </span>
+            {getLineProgress(3).showCursor && (
+              <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
+            )}
+          </div>
+        </div>
 
         {/* Supporting Text */}
         <motion.p
@@ -134,7 +230,7 @@ export default function Hero() {
             WATCH SHOWREEL
           </MagneticButton>
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Bottom Telemetry & Scroll Cue */}
       <div className="relative z-10 w-full flex items-end justify-between font-mono-tech text-[10px] text-[#777777] tracking-[0.2em] uppercase pointer-events-auto">
