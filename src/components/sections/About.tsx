@@ -2,9 +2,8 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Award, Briefcase, GraduationCap, Cpu, MapPin, CheckCircle2 } from 'lucide-react';
+import { Briefcase, GraduationCap, Cpu, MapPin, CheckCircle2 } from 'lucide-react';
 import { siteConfig } from '@/data/site';
-import MagneticButton from '@/components/motion/MagneticButton';
 
 export default function About() {
   return (
@@ -20,8 +19,9 @@ export default function About() {
               <span>SEC 07 // BIOGRAPHY & PROFILE</span>
               <span>INDEX: PERS // ZEESHAN</span>
             </div>
+            {/* Main Header: ABOUT (with Mohammad Zeeshan removed per user request) */}
             <h2 className="font-sans-body font-black text-4xl sm:text-6xl md:text-7xl uppercase text-[#F0F0ED] tracking-tight">
-              ABOUT MOHAMMAD ZEESHAN
+              ABOUT
             </h2>
           </div>
           <p className="font-mono-tech text-xs sm:text-sm text-[#A1A1A1] tracking-wider uppercase max-w-sm md:text-right">
@@ -29,11 +29,12 @@ export default function About() {
           </p>
         </div>
 
-        {/* Asymmetrical Editorial Composition (Inspired by Reference 12) */}
+        {/* Asymmetrical Editorial Composition */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           {/* Left Column: Editorial Bio, Experience & Education */}
           <div className="lg:col-span-7 flex flex-col gap-10">
             <div>
+              {/* Telemetry Location & Coordinates Header */}
               <div className="flex flex-wrap items-center gap-2 font-mono-tech text-xs text-[#777777] uppercase tracking-widest mb-3">
                 <span className="relative flex h-2 w-2 mr-1">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/40 opacity-75" />
@@ -56,6 +57,7 @@ export default function About() {
                 <div className="h-[2px] w-14 bg-gradient-to-r from-white via-white/60 to-transparent rounded-full group-hover:w-full transition-all duration-500 ease-out mt-1.5" />
               </div>
 
+              {/* Role Indicator with Pulsing Accent */}
               <div className="flex items-center gap-2 font-mono-tech text-xs tracking-[0.2em] uppercase text-[#A1A1A1]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80 animate-pulse" />
                 <span>{siteConfig.role}</span>
@@ -132,7 +134,7 @@ export default function About() {
             </div>
           </div>
 
-          {/* Right Column: Editorial Monochrome Portrait Box (Inspired by Reference 12) */}
+          {/* Right Column: Editorial Monochrome Portrait Box */}
           <div className="lg:col-span-5 flex flex-col gap-6">
             <div className="relative w-full aspect-[4/5] rounded-lg border border-white/[0.12] bg-[#111111] overflow-hidden group shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
               {/* Corner Viewfinder Reticles */}
@@ -141,21 +143,21 @@ export default function About() {
               <div className="corner-bracket corner-bl !bottom-3 !left-3" />
               <div className="corner-bracket corner-br !bottom-3 !right-3" />
 
-              {/* Authentic Editorial Portrait of Mohammad Zeeshan */}
+              {/* Authentic Editorial Portrait of Mohammad Zeeshan (Shifted upward to center face) */}
               <Image
                 src="/assets/branding/zeeshan.jpg"
                 alt="Mohammad Zeeshan Rafik Shaikh Portrait"
                 fill
                 priority
-                className="object-cover object-[center_20%] filter grayscale contrast-[1.25] brightness-[0.95] group-hover:scale-105 group-hover:contrast-[1.3] transition-all duration-700 ease-out"
+                className="object-cover object-[center_60%] filter grayscale contrast-[1.25] brightness-[0.95] group-hover:scale-105 group-hover:contrast-[1.3] transition-all duration-700 ease-out"
                 sizes="(max-width: 768px) 100vw, 40vw"
               />
 
               {/* Vignette Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-transparent to-transparent opacity-80" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-transparent to-transparent opacity-80 pointer-events-none" />
 
               {/* Telemetry HUD on Portrait */}
-              <div className="absolute bottom-6 left-6 right-6 font-mono-tech text-[10px] text-[#A1A1A1] uppercase tracking-wider flex justify-between items-end">
+              <div className="absolute bottom-6 left-6 right-6 font-mono-tech text-[10px] text-[#A1A1A1] uppercase tracking-wider flex justify-between items-end pointer-events-none">
                 <div>
                   <span className="block text-[#F0F0ED] font-bold text-xs">
                     {siteConfig.displayName}

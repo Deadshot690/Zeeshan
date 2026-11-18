@@ -101,23 +101,50 @@
   border-color: rgba(240, 240, 237, 0.45);
   pointer-events: none;
 }
-.corner-tl { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
-.corner-tr { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
-.corner-bl { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; }
-.corner-br { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
+
+.corner-tl {
+  top: 0;
+  left: 0;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+
+.corner-tr {
+  top: 0;
+  right: 0;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+
+.corner-bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+
+.corner-br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
 
 /* Custom Scrollbar for overflow regions */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }
+
 ::-webkit-scrollbar-track {
   background: #080808;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
@@ -126,6 +153,7 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
