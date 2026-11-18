@@ -7,12 +7,28 @@ import * as THREE from 'three';
 import HeroObject from './HeroObject';
 import CameraController from './CameraController';
 
+// Suppress upstream library deprecation notice for THREE.Clock & ANGLE precision warning
+if (typeof window !== 'undefined') {
+  const origWarn = console.warn;
+  console.warn = (...args: any[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      (args[0].includes('THREE.Clock: This module has been deprecated') ||
+       args[0].includes('THREE.WebGLProgram: Program Info Log'))
+    ) {
+      return;
+    }
+    origWarn.apply(console, args);
+  };
+}
+
 interface SceneProps {
   className?: string;
   scrollProgress?: number;
+  isVisible?: boolean;
 }
 
-export default function Scene({ className = '', scrollProgress = 0 }: SceneProps) {
+export default function Scene({ className = '', scrollProgress = 0, isVisible = true }: SceneProps) {
   const pointer = useRef({ x: 0, y: 0 });
   const [hasWebGL, setHasWebGL] = useState(true);
 
@@ -54,6 +70,7 @@ export default function Scene({ className = '', scrollProgress = 0 }: SceneProps
   return (
     <div className={`relative w-full h-full ${className}`}>
       <Canvas
+        frameloop={isVisible ? 'always' : 'never'}
         camera={{ position: [0, 0, 5.5], fov: 42 }}
         dpr={[1, 2]}
         gl={{

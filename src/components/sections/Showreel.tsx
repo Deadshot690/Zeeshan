@@ -301,7 +301,7 @@ export default function Showreel() {
               playsInline
               loop
               muted={isMuted}
-              preload="metadata"
+              preload="auto"
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.015]"
             />
 

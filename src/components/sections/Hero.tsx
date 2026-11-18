@@ -78,6 +78,8 @@ export default function Hero() {
     };
   };
 
+  const [isHeroVisible, setIsHeroVisible] = useState(true);
+
   useEffect(() => {
     const handleScroll = () => {
       if (!heroRef.current) return;
@@ -87,7 +89,24 @@ export default function Hero() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    // Pause WebGL rendering loop when Hero is completely scrolled off-screen
+    // This frees 100% GPU bandwidth for seamless 60fps video playback below!
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setIsHeroVisible(entries[0]?.isIntersecting ?? true);
+      },
+      { threshold: 0.05 }
+    );
+
+    if (heroRef.current) {
+      observer.observe(heroRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
+    };
   }, []);
 
   return (
@@ -98,7 +117,7 @@ export default function Hero() {
     >
       {/* Interactive 3D WebGL Background Scene */}
       <div className="absolute inset-0 z-0 pointer-events-auto">
-        <Scene scrollProgress={scrollProgress} />
+        <Scene scrollProgress={scrollProgress} isVisible={isHeroVisible} />
       </div>
 
       {/* Viewfinder Framing Brackets */}

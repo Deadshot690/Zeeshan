@@ -71,9 +71,11 @@ export default function HeroObject({ pointer, scrollProgress = 0 }: HeroObjectPr
 
   // Instanced droplets transformation
   const dummy = useMemo(() => new THREE.Object3D(), []);
+  const elapsedTimeRef = useRef(0);
 
-  useFrame((state, delta) => {
-    const time = state.clock.getElapsedTime();
+  useFrame((_, delta) => {
+    elapsedTimeRef.current += Math.min(delta, 0.1);
+    const time = elapsedTimeRef.current;
 
     if (groupRef.current) {
       // Smooth pointer parallax
