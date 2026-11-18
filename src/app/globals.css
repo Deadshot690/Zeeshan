@@ -158,3 +158,47 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Kinetic Infinite Marquee */
+@keyframes marqueeLeft {
+  0% {
+    transform: translate3d(0%, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee-infinite {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marqueeLeft 30s linear infinite;
+}
+
+.animate-marquee-infinite:hover {
+  animation-play-state: paused;
+}
+
+/* Equalizer VU Bar Bounces */
+@keyframes eqBounce1 {
+  0%, 100% { height: 25%; }
+  50% { height: 95%; }
+}
+@keyframes eqBounce2 {
+  0%, 100% { height: 75%; }
+  50% { height: 30%; }
+}
+@keyframes eqBounce3 {
+  0%, 100% { height: 45%; }
+  50% { height: 85%; }
+}
+@keyframes eqBounce4 {
+  0%, 100% { height: 90%; }
+  50% { height: 15%; }
+}
+
+.animate-eq-1 { animation: eqBounce1 1.1s ease-in-out infinite; }
+.animate-eq-2 { animation: eqBounce2 0.85s ease-in-out infinite; }
+.animate-eq-3 { animation: eqBounce3 1.3s ease-in-out infinite; }
+.animate-eq-4 { animation: eqBounce4 0.95s ease-in-out infinite; }
