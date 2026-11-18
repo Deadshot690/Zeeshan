@@ -1,249 +1,398 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Play, Pause, Layers, Volume2, Mic, Sparkles, Scissors, Clock } from 'lucide-react';
-import BeforeAfter from '@/components/ui/BeforeAfter';
+import { Settings, Scissors, Film, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { soundManager } from '@/lib/sound';
+
+gsap.registerPlugin(ScrollTrigger);
+
+// Authentic audio waveform amplitude data for Track 01
+const WAVEFORM_AMPLITUDES = [
+  20, 35, 48, 30, 65, 88, 76, 96, 62, 45, 32, 55, 80, 94, 100, 90, 68, 50, 36, 60,
+  84, 98, 72, 58, 40, 50, 68, 82, 60, 44, 32, 22, 38, 58, 75, 90, 66, 48, 34, 52,
+  78, 92, 85, 70, 52, 40, 62, 88, 100, 78, 60, 42, 30, 48, 70, 86, 96, 80, 62, 45,
+  36, 58, 80, 94, 88, 70, 54, 40, 26, 42, 65, 82, 96, 78, 60, 46, 32, 24, 18, 12,
+];
 
 export default function BehindTheEdit() {
-  const [playheadPos, setPlayheadPos] = useState(38);
-  const [isTimelinePlaying, setIsTimelinePlaying] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const comparisonContainerRef = useRef<HTMLDivElement>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+
+  // Comparison slider position (percentage 0 to 100)
+  const [sliderPosition, setSliderPosition] = useState(50);
+  const [isDraggingSlider, setIsDraggingSlider] = useState(false);
+
+  // Timeline interactive playhead position (percentage 0 to 100)
+  const [playheadPos, setPlayheadPos] = useState(42);
+  const [isTimelineHovered, setIsTimelineHovered] = useState(false);
+
+  // Comparison Slider Drag Logic with Subpixel Accuracy & Magnetic Center Snap
+  const updateSliderFromClientX = useCallback((clientX: number) => {
+    if (!comparisonContainerRef.current) return;
+    const rect = comparisonContainerRef.current.getBoundingClientRect();
+    const rawPos = ((clientX - rect.left) / rect.width) * 100;
+    let clamped = Math.max(0, Math.min(100, rawPos));
+
+    // Subtle magnetic snap when within 2% of the center (50%)
+    if (Math.abs(clamped - 50) < 2) {
+      clamped = 50;
+    }
+    setSliderPosition(clamped);
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    setIsDraggingSlider(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    updateSliderFromClientX(e.clientX);
+    soundManager.playClick();
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingSlider) return;
+    updateSliderFromClientX(e.clientX);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (isDraggingSlider) {
+      setIsDraggingSlider(false);
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // Safe no-op if pointer was already released
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setSliderPosition((prev) => Math.max(0, prev - 4));
+      soundManager.playClick();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      setSliderPosition((prev) => Math.min(100, prev + 4));
+      soundManager.playClick();
+    }
+  };
+
+  // Timeline interactive seek
+  const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    setPlayheadPos(pos);
+    soundManager.playClick();
+  };
+
+  // Automated gentle playhead motion when idle
+  useEffect(() => {
+    if (isTimelineHovered) return;
+    const interval = setInterval(() => {
+      setPlayheadPos((prev) => (prev >= 98 ? 2 : prev + 0.12));
+    }, 50);
+    return () => clearInterval(interval);
+  }, [isTimelineHovered]);
+
+  // GSAP Choreographed Entrance Animation
+  useEffect(() => {
+    if (!sectionRef.current) return;
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top 80%',
+          once: true,
+        },
+        defaults: { ease: 'power3.out' },
+      });
+
+      // 1. Indicator fade in
+      tl.from(
+        '.bte-indicator',
+        { opacity: 0, y: -12, duration: 0.5, clearProps: 'all' }
+      );
+
+      // 2. Heading lines reveal via masked vertical clip
+      tl.from(
+        '.bte-heading-line',
+        { yPercent: 105, opacity: 0, duration: 0.8, stagger: 0.1, ease: 'power4.out', clearProps: 'all' },
+        '-=0.3'
+      );
+
+      // 3. Supporting copy reveal
+      tl.from(
+        '.bte-copy',
+        { opacity: 0, y: 12, duration: 0.6, clearProps: 'all' },
+        '-=0.5'
+      );
+
+      // 4. Comparison panel smooth scale and fade entrance
+      tl.from(
+        comparisonContainerRef.current,
+        { opacity: 0, scale: 0.97, y: 18, duration: 0.9, ease: 'power3.out', clearProps: 'all' },
+        '-=0.5'
+      );
+
+      // 5. Timeline entrance from bottom
+      tl.from(
+        timelineRef.current,
+        { opacity: 0, y: 20, duration: 0.8, ease: 'power3.out', clearProps: 'all' },
+        '-=0.6'
+      );
+
+      // 6. Timeline clips smooth appearance
+      tl.from(
+        '.bte-timeline-clip',
+        { opacity: 0, scaleX: 0.88, duration: 0.7, stagger: 0.08, ease: 'power2.out', clearProps: 'all' },
+        '-=0.5'
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
     <section
+      ref={sectionRef}
       id="behind-the-edit"
-      className="relative w-full py-28 md:py-40 px-6 md:px-12 bg-[#080808] border-t border-white/[0.08] overflow-hidden"
+      className="relative z-10 w-full py-16 sm:py-20 lg:py-24 px-6 sm:px-10 md:px-14 lg:px-16 bg-[#080808] flex items-center overflow-hidden select-none border-t border-white/[0.06]"
     >
-      <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 pb-6 border-b border-white/[0.08]">
-          <div>
-            <div className="flex items-center gap-3 font-mono-tech text-[10px] text-[#777777] tracking-[0.25em] uppercase mb-2">
-              <span>SEC 05 // POST-PRODUCTION PIPELINE</span>
-              <span>NLE SUITE</span>
-            </div>
-            <h2 className="font-sans-body font-black text-4xl sm:text-6xl md:text-7xl uppercase text-[#F0F0ED] tracking-tight">
-              FROM RAW TO REFINED.
-            </h2>
-          </div>
-          <p className="font-mono-tech text-xs sm:text-sm text-[#A1A1A1] tracking-wider uppercase max-w-sm md:text-right">
-            A look inside the editing process and how the story comes to life.
-          </p>
-        </div>
-
-        {/* Feature 1: Draggable Before / After Grading Comparison Slider */}
-        <div className="mb-20">
-          <div className="flex items-center justify-between font-mono-tech text-xs text-[#777777] uppercase tracking-wider mb-4">
-            <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400" />
-              <span>01 // DYNAMIC COLOR SCIENCE & SENSOR RECOVERY</span>
-            </span>
-            <span className="text-[#A1A1A1]">[ ARRI LOG-C3 → 35MM EMULATION ]</span>
-          </div>
-
-          <BeforeAfter />
-
-          <p className="mt-4 font-mono-tech text-[11px] text-[#777777] tracking-wider uppercase text-right">
-            * Demonstration comparison illustrating flat sensor grading curve and highlight recovery.
-          </p>
-        </div>
-
-        {/* Feature 2: NLE Editing Timeline & Waveform Visualization (Inspired by Ref 11) */}
-        <div className="p-6 md:p-8 rounded-lg border border-white/[0.1] bg-[#0c0c0c] shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
-          {/* NLE Toolbar Header */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-white/[0.08] font-mono-tech text-xs">
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-2 text-[#F0F0ED] font-bold tracking-wider">
-                <Scissors className="w-3.5 h-3.5" />
-                <span>TIMELINE // SHORT_FORM_ENGAGE_V04.prproj</span>
+      <div className="w-full max-w-7xl mx-auto flex flex-col gap-8 lg:gap-10">
+        {/* AREA A — MAIN CONTENT: TWO-COLUMN COMPOSITION (Matches Reference 07) */}
+        <div className="w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-14">
+          {/* LEFT COLUMN: Section Indicator, Heading & Description (~28% on desktop) */}
+          <div className="w-full lg:w-[28%] flex flex-col justify-start flex-shrink-0">
+            {/* Section Indicator: 05 /11 */}
+            <div className="bte-indicator flex flex-col gap-1 mb-8 sm:mb-10 pointer-events-none">
+              <span className="font-mono-tech text-xs sm:text-sm font-semibold text-[#F0F0ED] tracking-widest">
+                05
               </span>
-              <span className="px-2 py-0.5 rounded bg-white/[0.06] text-[#A1A1A1] text-[10px]">
-                24.00 FPS
+              <span className="font-mono-tech text-[10px] sm:text-xs text-[#777777] tracking-widest">
+                /11
               </span>
             </div>
 
-            <div className="flex items-center gap-6 text-[#A1A1A1] text-[11px]">
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3 h-3 text-[#777777]" />
-                <span className="text-[#F0F0ED]">00:00:14:08</span>
-              </span>
-              <span className="hidden sm:inline text-[#777777]">DURATION: 00:00:45:00</span>
+            {/* Main Headline: FROM RAW TO REFINED. (Condensed bold editorial display) */}
+            <div className="py-1">
+              <div className="overflow-hidden">
+                <h2 className="bte-heading-line font-sans-body font-black text-4xl sm:text-5xl lg:text-[3.2rem] xl:text-[3.8rem] uppercase tracking-[-0.02em] text-[#F0F0ED] leading-[0.95] m-0">
+                  FROM RAW
+                </h2>
+              </div>
+              <div className="overflow-hidden">
+                <h2 className="bte-heading-line font-sans-body font-black text-4xl sm:text-5xl lg:text-[3.2rem] xl:text-[3.8rem] uppercase tracking-[-0.02em] text-[#F0F0ED] leading-[0.95] m-0">
+                  TO REFINED.
+                </h2>
+              </div>
             </div>
+
+            {/* Supporting Copy */}
+            <p className="bte-copy mt-5 sm:mt-6 font-mono-tech text-xs sm:text-[13px] text-[#A1A1A1] tracking-[0.2em] uppercase leading-relaxed max-w-xs">
+              A LOOK INSIDE THE EDITING PROCESS
+              <br />
+              AND HOW THE STORY COMES TO LIFE.
+            </p>
           </div>
 
-          {/* Timeline Tracks Grid */}
-          <div className="relative mt-6 flex flex-col gap-2 overflow-x-auto no-scrollbar pb-2">
-            {/* Playhead Needle (Draggable / Positioned) */}
+          {/* RIGHT COLUMN: Interactive RAW vs FINAL Comparison Image (~72% on desktop) */}
+          <div className="w-full lg:w-[72%] flex-grow">
             <div
-              className="absolute top-0 bottom-0 w-[2px] bg-white z-30 pointer-events-none"
-              style={{ left: `${playheadPos}%` }}
+              ref={comparisonContainerRef}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onKeyDown={handleKeyDown}
+              tabIndex={0}
+              role="slider"
+              aria-label="Interactive RAW vs FINAL grading comparison slider"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(sliderPosition)}
+              className="group relative w-full aspect-video rounded-sm sm:rounded border border-white/10 bg-[#070707] overflow-hidden cursor-ew-resize shadow-[0_25px_60px_rgba(0,0,0,0.9)] transition-all duration-300 hover:border-white/25 focus:outline-none focus:ring-1 focus:ring-white/40"
+              data-cursor="DRAG"
             >
-              <div className="w-3 h-3 bg-white rotate-45 -translate-x-[5px] -translate-y-1 shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
-            </div>
+              {/* Layer 1 (Bottom / Base): FINAL Edited Footage */}
+              <div className="absolute inset-0 w-full h-full pointer-events-none">
+                <Image
+                  src="/assets/behind-the-edit/final.webp"
+                  alt="FINAL Graded Footage — Alpine Mountain Landscape with Hiker"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 72vw"
+                  className="object-cover object-center"
+                />
 
-            {/* Track 1: V3 Kinetic Captions & Motion Graphics */}
-            <div className="flex items-center gap-3">
-              <div className="w-16 flex-shrink-0 font-mono-tech text-[10px] text-[#777777] uppercase flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                <span>V3 [FX]</span>
-              </div>
-              <div className="flex-grow h-9 rounded bg-white/[0.03] border border-white/[0.04] relative flex items-center px-2 overflow-hidden">
-                <div
-                  className="absolute left-[8%] w-[25%] h-7 rounded bg-indigo-500/30 border border-indigo-400/40 flex items-center px-2 font-mono-tech text-[9px] text-indigo-200"
-                >
-                  HOOK_TITLE_KINETIC.aep
-                </div>
-                <div
-                  className="absolute left-[38%] w-[32%] h-7 rounded bg-indigo-500/30 border border-indigo-400/40 flex items-center px-2 font-mono-tech text-[9px] text-indigo-200"
-                >
-                  CALLOUT_LOWER_THIRD.mov
-                </div>
-                <div
-                  className="absolute left-[75%] w-[20%] h-7 rounded bg-indigo-500/30 border border-indigo-400/40 flex items-center px-2 font-mono-tech text-[9px] text-indigo-200"
-                >
-                  OUTRO_CARD.aep
+                {/* Top-Right Pill Label: FINAL */}
+                <div className="absolute top-4 right-4 sm:top-5 sm:right-5 z-20 px-3.5 py-1.5 rounded bg-black/90 text-white border border-white/25 font-sans-body text-[11px] sm:text-xs font-black tracking-widest uppercase select-none shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
+                  FINAL
                 </div>
               </div>
-            </div>
 
-            {/* Track 2: V2 Overlays & B-Roll */}
-            <div className="flex items-center gap-3">
-              <div className="w-16 flex-shrink-0 font-mono-tech text-[10px] text-[#777777] uppercase flex items-center gap-1">
-                <Layers className="w-3 h-3" />
-                <span>V2 [B]</span>
-              </div>
-              <div className="flex-grow h-9 rounded bg-white/[0.03] border border-white/[0.04] relative flex items-center px-2 overflow-hidden">
-                <div
-                  className="absolute left-[15%] w-[18%] h-7 rounded bg-teal-500/30 border border-teal-400/40 flex items-center px-2 font-mono-tech text-[9px] text-teal-200"
-                >
-                  B_ROLL_CUTAWAY_01
-                </div>
-                <div
-                  className="absolute left-[45%] w-[22%] h-7 rounded bg-teal-500/30 border border-teal-400/40 flex items-center px-2 font-mono-tech text-[9px] text-teal-200"
-                >
-                  PRODUCT_MACRO_SHOT
-                </div>
-              </div>
-            </div>
+              {/* Layer 2 (Top / Clipped): RAW Flat Log Footage */}
+              <div
+                className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden"
+                style={{
+                  clipPath: `inset(0 ${100 - sliderPosition}% 0 0)`,
+                }}
+              >
+                <Image
+                  src="/assets/behind-the-edit/raw.webp"
+                  alt="RAW Sensor Footage — Flat Log Emulation with Lifted Shadows"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 72vw"
+                  className="object-cover object-center"
+                />
 
-            {/* Track 3: V1 Primary Cut (A-Roll) */}
-            <div className="flex items-center gap-3">
-              <div className="w-16 flex-shrink-0 font-mono-tech text-[10px] text-[#777777] uppercase flex items-center gap-1">
-                <Scissors className="w-3 h-3" />
-                <span>V1 [A]</span>
-              </div>
-              <div className="flex-grow h-11 rounded bg-white/[0.04] border border-white/[0.06] relative flex items-center overflow-hidden">
-                <div className="w-[18%] h-full border-r border-black/40 bg-zinc-800/80 flex items-center px-2 font-mono-tech text-[9px] text-zinc-300">
-                  A_ROLL_TAKE01
-                </div>
-                <div className="w-[28%] h-full border-r border-black/40 bg-zinc-700/80 flex items-center px-2 font-mono-tech text-[9px] text-zinc-200">
-                  MAIN_SPEAKER_CAM_A
-                </div>
-                <div className="w-[24%] h-full border-r border-black/40 bg-zinc-800/80 flex items-center px-2 font-mono-tech text-[9px] text-zinc-300">
-                  REACTION_RAMP_120FPS
-                </div>
-                <div className="w-[30%] h-full bg-zinc-700/80 flex items-center px-2 font-mono-tech text-[9px] text-zinc-200">
-                  SUMMARY_CONCLUSION
+                {/* Top-Left Pill Label: RAW */}
+                <div className="absolute top-4 left-4 sm:top-5 sm:left-5 z-20 px-3.5 py-1.5 rounded bg-[#F0F0ED] text-[#080808] font-sans-body text-[11px] sm:text-xs font-black tracking-widest uppercase select-none shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
+                  RAW
                 </div>
               </div>
-            </div>
 
-            {/* Timeline Audio Separator Bar */}
-            <div className="w-full h-[1px] bg-white/10 my-1" />
+              {/* Vertical Divider Line */}
+              <div
+                className="absolute top-0 bottom-0 w-[2px] bg-white z-30 pointer-events-none transition-opacity duration-200"
+                style={{ left: `${sliderPosition}%` }}
+              >
+                {/* Subtle vertical glow along divider line */}
+                <div className="absolute inset-y-0 -left-1 -right-1 bg-white/30 blur-[2px] pointer-events-none" />
+              </div>
 
-            {/* Track 4: A1 Dialogue Waveform (Cyan - Inspired by Reference 11) */}
-            <div className="flex items-center gap-3">
-              <div className="w-16 flex-shrink-0 font-mono-tech text-[10px] text-[#777777] uppercase flex items-center gap-1">
-                <Mic className="w-3 h-3 text-cyan-400" />
-                <span>A1 [VO]</span>
-              </div>
-              <div className="flex-grow h-12 rounded bg-cyan-950/20 border border-cyan-800/30 relative flex items-center px-2 overflow-hidden">
-                <div className="w-full h-full flex items-center justify-between opacity-80">
-                  {/* Procedural SVG Waveform */}
-                  <svg className="w-full h-8" preserveAspectRatio="none" viewBox="0 0 500 40">
-                    <path
-                      d="M0 20 Q 25 5, 50 20 T 100 20 T 150 8 T 200 20 T 250 2 T 300 20 T 350 12 T 400 20 T 450 5 T 500 20"
-                      fill="none"
-                      stroke="#22d3ee"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M0 20 Q 25 35, 50 20 T 100 20 T 150 32 T 200 20 T 250 38 T 300 20 T 350 28 T 400 20 T 450 35 T 500 20"
-                      fill="none"
-                      stroke="#06b6d4"
-                      strokeWidth="1.5"
-                      opacity="0.6"
-                    />
-                  </svg>
+              {/* Circular Draggable Interaction Handle with < > Arrows */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-30 pointer-events-none"
+                style={{ left: `${sliderPosition}%` }}
+              >
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-white bg-black/80 backdrop-blur-md flex items-center justify-center text-white shadow-[0_0_25px_rgba(0,0,0,0.9)] group-hover:scale-110 group-active:scale-95 transition-transform duration-200">
+                  <div className="flex items-center gap-0.5 -mx-0.5">
+                    <ChevronLeft className="w-4 h-4 text-white stroke-[2.8]" />
+                    <ChevronRight className="w-4 h-4 text-white stroke-[2.8]" />
+                  </div>
                 </div>
-                <span className="absolute top-1 left-2 font-mono-tech text-[8px] text-cyan-300">
-                  SPEECH_DENOISED_COMPRESSED.wav
-                </span>
-              </div>
-            </div>
-
-            {/* Track 5: A2 Sound FX & Risers (Yellow - Inspired by Reference 11) */}
-            <div className="flex items-center gap-3">
-              <div className="w-16 flex-shrink-0 font-mono-tech text-[10px] text-[#777777] uppercase flex items-center gap-1">
-                <Volume2 className="w-3 h-3 text-amber-400" />
-                <span>A2 [SFX]</span>
-              </div>
-              <div className="flex-grow h-10 rounded bg-amber-950/20 border border-amber-800/30 relative flex items-center px-2 overflow-hidden">
-                <div className="absolute left-[12%] w-[12%] h-full flex items-center">
-                  <div className="w-full h-4 bg-amber-400/40 rounded border border-amber-300/60" />
-                </div>
-                <div className="absolute left-[42%] w-[16%] h-full flex items-center">
-                  <div className="w-full h-6 bg-amber-400/50 rounded border border-amber-300/60" />
-                </div>
-                <div className="absolute left-[78%] w-[14%] h-full flex items-center">
-                  <div className="w-full h-5 bg-amber-400/40 rounded border border-amber-300/60" />
-                </div>
-                <span className="absolute top-1 left-2 font-mono-tech text-[8px] text-amber-300">
-                  SWEEPS_RISERS_IMPACTS.wav
-                </span>
-              </div>
-            </div>
-
-            {/* Track 6: A3 Score & Sub-Bass (Magenta - Inspired by Reference 11) */}
-            <div className="flex items-center gap-3">
-              <div className="w-16 flex-shrink-0 font-mono-tech text-[10px] text-[#777777] uppercase flex items-center gap-1">
-                <Volume2 className="w-3 h-3 text-fuchsia-400" />
-                <span>A3 [MX]</span>
-              </div>
-              <div className="flex-grow h-10 rounded bg-fuchsia-950/20 border border-fuchsia-800/30 relative flex items-center px-2 overflow-hidden">
-                <svg className="w-full h-6 opacity-70" preserveAspectRatio="none" viewBox="0 0 500 30">
-                  <path
-                    d="M0 15 Q 40 2, 80 15 T 160 15 T 240 4 T 320 15 T 400 3 T 480 15 L 500 15"
-                    fill="none"
-                    stroke="#e879f9"
-                    strokeWidth="1.5"
-                  />
-                </svg>
-                <span className="absolute top-1 left-2 font-mono-tech text-[8px] text-fuchsia-300">
-                  CINEMATIC_SYNTH_SCORE.wav [-14 LUFS]
-                </span>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Interactive Scrub Control */}
-          <div className="mt-6 pt-4 border-t border-white/[0.08] flex items-center justify-between font-mono-tech text-[10px] text-[#777777]">
-            <div className="flex items-center gap-4">
-              <span>SCRUB TIMELINE:</span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={playheadPos}
-                onChange={(e) => setPlayheadPos(Number(e.target.value))}
-                className="w-48 sm:w-72 accent-white cursor-pointer"
-                aria-label="Timeline playhead scrub slider"
-              />
-              <span className="text-[#F0F0ED]">{playheadPos}%</span>
+        {/* AREA B — PROFESSIONAL VIDEO EDITING TIMELINE (Matches Reference 07) */}
+        <div
+          ref={timelineRef}
+          onMouseEnter={() => setIsTimelineHovered(true)}
+          onMouseLeave={() => setIsTimelineHovered(false)}
+          className="w-full rounded-sm sm:rounded border border-white/[0.08] bg-[#0c0c0e] p-3 sm:p-4 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden"
+        >
+          <div className="w-full flex items-stretch gap-3 sm:gap-4">
+            {/* Left Toolbar Strip with 4 Track Control Icons */}
+            <div className="w-8 sm:w-10 flex-shrink-0 flex flex-col justify-between py-1.5 border-r border-white/[0.06] pr-2 text-[#777777]">
+              {/* Settings Icon */}
+              <div className="flex items-center justify-center hover:text-[#F0F0ED] transition-colors cursor-pointer" title="Timeline Settings">
+                <Settings className="w-3.5 h-3.5" />
+              </div>
+
+              {/* Razor / Cut Tool */}
+              <div className="flex items-center justify-center hover:text-[#F0F0ED] transition-colors cursor-pointer" title="Razor Tool [C]">
+                <Scissors className="w-3.5 h-3.5" />
+              </div>
+
+              {/* Film Track Icon */}
+              <div className="flex items-center justify-center hover:text-[#F0F0ED] transition-colors cursor-pointer" title="Video Track V1">
+                <Film className="w-3.5 h-3.5" />
+              </div>
+
+              {/* Lock Track Icon */}
+              <div className="flex items-center justify-center hover:text-[#F0F0ED] transition-colors cursor-pointer" title="Lock All Tracks">
+                <Lock className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <span className="hidden sm:inline uppercase tracking-widest text-[#A1A1A1]">
-              6 ACTIVE TRACKS // MULTI-STEM MASTER
-            </span>
+
+            {/* Main Multi-Track NLE Workspace */}
+            <div
+              onClick={handleTimelineClick}
+              className="relative flex-grow flex flex-col gap-2.5 sm:gap-3 overflow-hidden cursor-pointer"
+            >
+              {/* Draggable Playhead Needle */}
+              <div
+                className="absolute top-0 bottom-0 w-[2px] bg-white z-30 pointer-events-none transition-all duration-75 shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                style={{ left: `${playheadPos}%` }}
+              >
+                {/* Playhead Top Triangle Needle */}
+                <div className="w-3 h-3 bg-white -translate-x-[5px] -translate-y-1 rotate-45 shadow-[0_0_12px_rgba(255,255,255,0.95)]" />
+              </div>
+
+              {/* TRACK 01: Video Thumbnails (5 sequential frames) + Horizontal Audio Waveform */}
+              <div className="w-full h-11 sm:h-12 flex items-center gap-2 sm:gap-3 bg-black/50 rounded-[3px] border border-white/[0.06] px-1.5 sm:px-2 overflow-hidden">
+                {/* 5 Video Thumbnails */}
+                <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className="relative w-12 sm:w-16 md:w-20 h-8 sm:h-9 rounded-[2px] overflow-hidden border border-white/20 bg-[#161616] flex-shrink-0 hover:border-white/50 hover:brightness-110 transition-all"
+                    >
+                      <Image
+                        src={`/assets/behind-the-edit/thumb_${i}.webp`}
+                        alt={`Video clip frame ${i}`}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Horizontal Audio Waveform */}
+                <div className="flex-grow h-full flex items-center justify-between px-2 sm:px-4 overflow-hidden">
+                  <div className="w-full flex items-center justify-between gap-[2px] h-6 sm:h-7 opacity-90">
+                    {WAVEFORM_AMPLITUDES.map((amp, idx) => (
+                      <div
+                        key={idx}
+                        className="w-[1.5px] sm:w-[2px] bg-[#E8E8E5] rounded-full transition-all"
+                        style={{
+                          height: `${Math.max(16, (amp / 100) * 100)}%`,
+                          opacity: idx < WAVEFORM_AMPLITUDES.length * (playheadPos / 100) ? 1 : 0.45,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* TRACK 02: Main Lavender / Purple Video Editing Track */}
+              <div className="w-full h-7 sm:h-8 bg-black/50 rounded-[3px] border border-white/[0.06] p-0.5 relative overflow-hidden flex items-center">
+                <div
+                  className="bte-timeline-clip h-full w-[98%] bg-[#7D6DB8] border border-[#9686D4]/60 rounded-[2px] shadow-[0_2px_12px_rgba(125,109,184,0.35)] flex items-center px-2.5 sm:px-3 text-[10px] font-mono-tech text-white font-medium tracking-wider truncate hover:brightness-110 transition-all"
+                  title="A01_C004_1028_RAW_4K.mov"
+                >
+                  <span className="hidden sm:inline">A01_C004_1028_RAW_4K.mov</span>
+                  <span className="sm:hidden">CLIP_01</span>
+                </div>
+              </div>
+
+              {/* TRACK 03: Secondary Effects Tracks (Purple-to-Cyan + Purple Clips) */}
+              <div className="w-full h-7 sm:h-8 bg-black/50 rounded-[3px] border border-white/[0.06] p-0.5 relative overflow-hidden flex items-center justify-between">
+                {/* Clip A: Purple-to-Cyan / Blue Gradient */}
+                <div
+                  className="bte-timeline-clip h-full w-[38%] bg-gradient-to-r from-[#7D6DB8] via-[#5C8EBC] to-[#45A8CA] border border-cyan-400/50 rounded-[2px] shadow-[0_2px_12px_rgba(69,168,202,0.3)] flex items-center px-2.5 sm:px-3 text-[10px] font-mono-tech text-white font-medium tracking-wider truncate hover:brightness-110 transition-all"
+                  title="COLOR_GRADE_EMULATION_V03"
+                >
+                  <span className="hidden sm:inline">COLOR_GRADE_V03</span>
+                  <span className="sm:hidden">FX_01</span>
+                </div>
+
+                {/* Clip B: Purple Track Clip positioned at the right side */}
+                <div
+                  className="bte-timeline-clip h-full w-[24%] bg-[#7D6DB8] border border-[#9686D4]/60 rounded-[2px] shadow-[0_2px_12px_rgba(125,109,184,0.35)] flex items-center px-2.5 sm:px-3 text-[10px] font-mono-tech text-white font-medium tracking-wider truncate hover:brightness-110 transition-all ml-auto"
+                  title="MASTER_GRADE_ACEScg"
+                >
+                  <span className="hidden sm:inline">MASTER_ACEScg</span>
+                  <span className="sm:hidden">FX_02</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
