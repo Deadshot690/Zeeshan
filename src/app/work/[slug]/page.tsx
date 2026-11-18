@@ -8,6 +8,7 @@ import { siteConfig } from '@/data/site';
 import MagneticButton from '@/components/motion/MagneticButton';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import CategoryVideoShowcase from '@/components/ui/CategoryVideoShowcase';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -70,36 +71,12 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           </p>
         </div>
 
-        {/* Large Cinematic Video Presentation */}
-        <div className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-lg border border-white/[0.12] bg-[#111111] overflow-hidden mb-16 shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
-          <div className="corner-bracket corner-tl !top-4 !left-4" />
-          <div className="corner-bracket corner-tr !top-4 !right-4" />
-          <div className="corner-bracket corner-bl !bottom-4 !left-4" />
-          <div className="corner-bracket corner-br !bottom-4 !right-4" />
-
-          {project.media.finalVideo ? (
-            <video
-              src={project.media.finalVideo}
-              poster={project.media.thumbnail}
-              controls
-              playsInline
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="relative w-full h-full">
-              <Image
-                src={project.media.thumbnail}
-                alt={project.title}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <span className="font-mono-tech text-xs tracking-widest uppercase text-white/70">
-                  ILLUSTRATIVE PREVIEW ONLY // NO SAMPLE FABRICATED
-                </span>
-              </div>
-            </div>
-          )}
+        {/* Category Video Showcase: Screening Theater & Catalog of All Videos */}
+        <div className="mb-20">
+          <CategoryVideoShowcase
+            items={project.items || []}
+            categoryTitle={project.category}
+          />
         </div>
 
         {/* Detailed Breakdown Grid */}
@@ -109,7 +86,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             <div>
               <h2 className="font-mono-tech text-xs tracking-[0.25em] text-[#777777] uppercase mb-4 flex items-center gap-2">
                 <Film className="w-3.5 h-3.5 text-[#F0F0ED]" />
-                <span>PROJECT NARRATIVE & CONTEXT</span>
+                <span>CATEGORY NARRATIVE & CONTEXT</span>
               </h2>
               <p className="font-sans-body text-base sm:text-lg text-[#A1A1A1] leading-relaxed font-light">
                 {project.description}
@@ -119,7 +96,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             <div>
               <h2 className="font-mono-tech text-xs tracking-[0.25em] text-[#777777] uppercase mb-4 flex items-center gap-2">
                 <Layers className="w-3.5 h-3.5 text-[#F0F0ED]" />
-                <span>EDITING CONTRIBUTION & DIRECTION</span>
+                <span>EDITING DIRECTION & POST-PRODUCTION</span>
               </h2>
               <p className="font-sans-body text-base sm:text-lg text-[#A1A1A1] leading-relaxed font-light">
                 {project.editingContribution}
@@ -185,10 +162,10 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
             <div className="p-5 rounded border border-white/10 bg-white/[0.02]">
               <span className="font-mono-tech text-[10px] text-[#777777] uppercase tracking-wider block mb-2">
-                NOTE ON ILLUSTRATIVE WORK
+                AUTHENTIC EDITORIAL ARCHIVE
               </span>
               <p className="font-sans-body text-xs text-[#A1A1A1] leading-relaxed">
-                Project entries represent editing techniques, pacing, and visual storytelling capabilities. Real client identity confidentiality is respected.
+                All featured videos represent authentic completed projects edited and post-produced by {siteConfig.displayName}.
               </p>
             </div>
           </div>
@@ -202,7 +179,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           >
             <div className="flex items-center gap-2 font-mono-tech text-xs text-[#777777] mb-3">
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-              <span>PREVIOUS PROJECT // {prev.identifier}</span>
+              <span>PREVIOUS CATEGORY // {prev.identifier}</span>
             </div>
             <h4 className="font-sans-body font-bold text-lg uppercase text-[#F0F0ED] group-hover:text-white">
               {prev.title}
@@ -214,7 +191,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             className="group p-6 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/30 transition-all flex flex-col justify-between text-right"
           >
             <div className="flex items-center justify-end gap-2 font-mono-tech text-xs text-[#777777] mb-3">
-              <span>NEXT PROJECT // {next.identifier}</span>
+              <span>NEXT CATEGORY // {next.identifier}</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </div>
             <h4 className="font-sans-body font-bold text-lg uppercase text-[#F0F0ED] group-hover:text-white">

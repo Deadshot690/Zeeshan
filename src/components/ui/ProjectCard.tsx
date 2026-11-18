@@ -74,9 +74,16 @@ export default function ProjectCard({ project, priority = false }: ProjectCardPr
           />
         )}
 
-        {/* Category Pill Overlay */}
-        <div className="absolute top-4 left-4 z-10 px-2.5 py-1 rounded bg-[#080808]/80 backdrop-blur-md border border-white/10 font-mono-tech text-[9px] uppercase tracking-wider text-[#F0F0ED]">
-          {project.category}
+        {/* Category Pill & Video Count Overlay */}
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 pointer-events-none">
+          <div className="px-2.5 py-1 rounded bg-[#080808]/85 backdrop-blur-md border border-white/15 font-mono-tech text-[9px] uppercase tracking-wider text-[#F0F0ED]">
+            {project.category}
+          </div>
+          {project.items && project.items.length > 0 && (
+            <div className="px-2 py-1 rounded bg-[#080808]/85 backdrop-blur-md border border-white/15 font-mono-tech text-[9px] uppercase tracking-wider text-emerald-400 font-medium">
+              {project.items.length} {project.items.length === 1 ? 'EDIT' : 'EDITS'}
+            </div>
+          )}
         </div>
 
         {/* Duration / Telemetry Overlay */}

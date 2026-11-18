@@ -15,11 +15,23 @@ export interface ProjectTechnicalSpecs {
   resolution?: string;
 }
 
+export interface ProjectMediaItem {
+  id: string;
+  title: string;
+  videoSrc: string;
+  thumbnailSrc: string;
+  duration: string;
+  isVertical: boolean;
+  resolution: string;
+  description?: string;
+  tag?: string;
+}
+
 export interface ProjectRecord {
   slug: string;
-  identifier: string; // "PROJECT 01", "PROJECT 02", "PROJECT 03"
+  identifier: string; // "WORK 01", "WORK 02", etc.
   title: string;
-  category: 'Short-form content' | 'YouTube videos' | 'Ranking videos' | 'Promotional advertisements' | 'Motion graphics' | 'Social media content';
+  category: 'Video Editing' | 'Motion Graphics' | 'Color Grading' | 'Visual Effects' | string;
   year?: string;
   tagline: string;
   description: string;
@@ -28,6 +40,7 @@ export interface ProjectRecord {
   specs: ProjectTechnicalSpecs;
   featured: boolean;
   order: number;
+  items?: ProjectMediaItem[];
 }
 
 export interface CapabilityItem {

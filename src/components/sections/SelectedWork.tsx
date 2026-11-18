@@ -20,10 +20,10 @@ export default function SelectedWork() {
 
   const categories = [
     'ALL',
-    'Short-form content',
-    'Ranking videos',
-    'Promotional advertisements',
-    'Motion graphics',
+    'Video Editing',
+    'Motion Graphics',
+    'Color Grading',
+    'Visual Effects',
   ];
 
   const filteredProjects =
