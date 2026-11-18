@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Preloader from '@/components/motion/Preloader';
 import Navbar from '@/components/layout/Navbar';
 import Hero from '@/components/sections/Hero';
@@ -13,13 +15,22 @@ import About from '@/components/sections/About';
 import Contact from '@/components/sections/Contact';
 import Footer from '@/components/layout/Footer';
 
+gsap.registerPlugin(ScrollTrigger);
+
 export default function HomePage() {
   const [preloaderDone, setPreloaderDone] = useState(false);
+
+  const handlePreloaderComplete = () => {
+    setPreloaderDone(true);
+    setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 150);
+  };
 
   return (
     <>
       {/* 01. Preloader */}
-      <Preloader onComplete={() => setPreloaderDone(true)} />
+      <Preloader onComplete={handlePreloaderComplete} />
 
       {/* 02. Navigation Header */}
       <Navbar />

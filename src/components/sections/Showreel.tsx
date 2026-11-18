@@ -94,7 +94,7 @@ export default function Showreel() {
   return (
     <section
       id="showreel"
-      className="relative w-full py-28 md:py-40 px-6 md:px-12 bg-[#080808] border-t border-white/[0.08] overflow-hidden"
+      className="relative z-10 w-full py-28 md:py-36 px-6 md:px-12 bg-[#080808] border-t border-white/[0.08] overflow-hidden"
     >
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}

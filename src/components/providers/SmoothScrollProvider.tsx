@@ -10,11 +10,13 @@ gsap.registerPlugin(ScrollTrigger);
 interface SmoothScrollContextType {
   lenis: Lenis | null;
   scrollTo: (target: string | number | HTMLElement, options?: Record<string, unknown>) => void;
+  refresh: () => void;
 }
 
 const SmoothScrollContext = createContext<SmoothScrollContextType>({
   lenis: null,
   scrollTo: () => {},
+  refresh: () => {},
 });
 
 export const useSmoothScroll = () => useContext(SmoothScrollContext);
@@ -48,12 +50,41 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
     gsap.ticker.add(tickerCallback);
     gsap.ticker.lagSmoothing(0);
 
+    // Refresh ScrollTrigger when fonts and assets are ready
+    if (document.fonts) {
+      document.fonts.ready.then(() => {
+        ScrollTrigger.refresh();
+      });
+    }
+
+    const onWindowLoad = () => {
+      ScrollTrigger.refresh();
+    };
+    window.addEventListener('load', onWindowLoad);
+
+    // Debounced resize observer
+    let resizeTimer: NodeJS.Timeout;
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 150);
+    };
+    window.addEventListener('resize', onResize);
+
     return () => {
       lenis.destroy();
       gsap.ticker.remove(tickerCallback);
+      window.removeEventListener('load', onWindowLoad);
+      window.removeEventListener('resize', onResize);
+      clearTimeout(resizeTimer);
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, []);
+
+  const refresh = () => {
+    ScrollTrigger.refresh();
+  };
 
   const scrollTo = (target: string | number | HTMLElement, options?: Record<string, unknown>) => {
     if (lenisInstance) {
@@ -69,7 +100,7 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
   };
 
   return (
-    <SmoothScrollContext.Provider value={{ lenis: lenisInstance, scrollTo }}>
+    <SmoothScrollContext.Provider value={{ lenis: lenisInstance, scrollTo, refresh }}>
       {children}
     </SmoothScrollContext.Provider>
   );

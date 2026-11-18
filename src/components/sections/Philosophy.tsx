@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform, useInView } from 'motion/react';
 import Image from 'next/image';
 import { soundManager } from '@/lib/sound';
 import { RotateCcw, Sparkles } from 'lucide-react';
+import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 
 interface AnimatedLineProps {
   text: string;
@@ -15,6 +16,7 @@ interface AnimatedLineProps {
 }
 
 export default function Philosophy() {
+  const { refresh } = useSmoothScroll();
   const containerRef = useRef<HTMLElement>(null);
   const isInView = useInView(containerRef, { once: false, amount: 0.25 });
 
@@ -70,6 +72,7 @@ export default function Philosophy() {
           }
           if (next >= totalChars) {
             setIsTyping(false);
+            if (refresh) refresh();
           }
           return next;
         });
@@ -77,7 +80,7 @@ export default function Philosophy() {
 
       return () => clearTimeout(timer);
     }
-  }, [isTyping, typedCount, totalChars]);
+  }, [isTyping, typedCount, totalChars, refresh]);
 
   function getCharAtIndex(index: number): string {
     let count = 0;
@@ -180,46 +183,78 @@ export default function Philosophy() {
         >
           <h2 className="flex flex-col tracking-tight uppercase leading-[0.94]">
             {/* Line 1: WE DON'T JUST (Serif italic) */}
-            <div className="min-h-[1.1em] flex items-baseline">
-              <span className="font-serif-editorial italic font-light text-[#777777] text-3xl sm:text-5xl md:text-7xl lg:text-[6.5rem]">
-                {getLineProgress(0).visibleText}
+            <div className="relative flex items-baseline">
+              <span
+                aria-hidden="true"
+                className="font-serif-editorial italic font-light text-3xl sm:text-5xl md:text-7xl lg:text-[6.5rem] opacity-0 select-none pointer-events-none"
+              >
+                {lines[0]!.text}
               </span>
-              {getLineProgress(0).showCursor && (
-                <span className="inline-block w-2 sm:w-3 md:w-4 h-[0.8em] bg-[#F0F0ED] ml-1.5 animate-pulse" />
-              )}
+              <div className="absolute inset-0 flex items-baseline">
+                <span className="font-serif-editorial italic font-light text-[#777777] text-3xl sm:text-5xl md:text-7xl lg:text-[6.5rem]">
+                  {getLineProgress(0).visibleText}
+                </span>
+                {getLineProgress(0).showCursor && (
+                  <span className="inline-block w-2 sm:w-3 md:w-4 h-[0.8em] bg-[#F0F0ED] ml-1.5 animate-pulse" />
+                )}
+              </div>
             </div>
 
             {/* Line 2: EDIT VIDEOS. (Sans Bold) */}
-            <div className="min-h-[1.1em] flex items-baseline my-1">
-              <span className="font-sans-body font-black text-[#F0F0ED] text-4xl sm:text-6xl md:text-8xl lg:text-[7.5rem] tracking-[-0.035em]">
-                {getLineProgress(1).visibleText}
+            <div className="relative flex items-baseline my-1">
+              <span
+                aria-hidden="true"
+                className="font-sans-body font-black text-4xl sm:text-6xl md:text-8xl lg:text-[7.5rem] tracking-[-0.035em] opacity-0 select-none pointer-events-none"
+              >
+                {lines[1]!.text}
               </span>
-              {getLineProgress(1).showCursor && (
-                <span className="inline-block w-2 sm:w-3 md:w-4 h-[0.8em] bg-[#F0F0ED] ml-1.5 animate-pulse" />
-              )}
+              <div className="absolute inset-0 flex items-baseline">
+                <span className="font-sans-body font-black text-[#F0F0ED] text-4xl sm:text-6xl md:text-8xl lg:text-[7.5rem] tracking-[-0.035em]">
+                  {getLineProgress(1).visibleText}
+                </span>
+                {getLineProgress(1).showCursor && (
+                  <span className="inline-block w-2 sm:w-3 md:w-4 h-[0.8em] bg-[#F0F0ED] ml-1.5 animate-pulse" />
+                )}
+              </div>
             </div>
 
             {/* Line 3: WE CREATE (Serif italic) */}
-            <div className="min-h-[1.1em] flex items-baseline my-1">
-              <span className="font-serif-editorial italic font-light text-[#A1A1A1] text-3xl sm:text-5xl md:text-7xl lg:text-[6.5rem]">
-                {getLineProgress(2).visibleText}
+            <div className="relative flex items-baseline my-1">
+              <span
+                aria-hidden="true"
+                className="font-serif-editorial italic font-light text-3xl sm:text-5xl md:text-7xl lg:text-[6.5rem] opacity-0 select-none pointer-events-none"
+              >
+                {lines[2]!.text}
               </span>
-              {getLineProgress(2).showCursor && (
-                <span className="inline-block w-2 sm:w-3 md:w-4 h-[0.8em] bg-[#F0F0ED] ml-1.5 animate-pulse" />
-              )}
+              <div className="absolute inset-0 flex items-baseline">
+                <span className="font-serif-editorial italic font-light text-[#A1A1A1] text-3xl sm:text-5xl md:text-7xl lg:text-[6.5rem]">
+                  {getLineProgress(2).visibleText}
+                </span>
+                {getLineProgress(2).showCursor && (
+                  <span className="inline-block w-2 sm:w-3 md:w-4 h-[0.8em] bg-[#F0F0ED] ml-1.5 animate-pulse" />
+                )}
+              </div>
             </div>
 
             {/* Line 4: EXPERIENCES. (Sans Bold) */}
-            <div className="min-h-[1.1em] flex items-baseline">
-              <span className="font-sans-body font-black text-[#F0F0ED] text-4xl sm:text-6xl md:text-8xl lg:text-[7.5rem] tracking-[-0.035em]">
-                {getLineProgress(3).visibleText}
+            <div className="relative flex items-baseline">
+              <span
+                aria-hidden="true"
+                className="font-sans-body font-black text-4xl sm:text-6xl md:text-8xl lg:text-[7.5rem] tracking-[-0.035em] opacity-0 select-none pointer-events-none"
+              >
+                {lines[3]!.text}
               </span>
-              {getLineProgress(3).showCursor && (
-                <span className="inline-block w-2 sm:w-3 md:w-4 h-[0.8em] bg-[#F0F0ED] ml-1.5 animate-pulse" />
-              )}
-              {!isTyping && typedCount >= totalChars && (
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 ml-3 animate-ping" />
-              )}
+              <div className="absolute inset-0 flex items-baseline">
+                <span className="font-sans-body font-black text-[#F0F0ED] text-4xl sm:text-6xl md:text-8xl lg:text-[7.5rem] tracking-[-0.035em]">
+                  {getLineProgress(3).visibleText}
+                </span>
+                {getLineProgress(3).showCursor && (
+                  <span className="inline-block w-2 sm:w-3 md:w-4 h-[0.8em] bg-[#F0F0ED] ml-1.5 animate-pulse" />
+                )}
+                {!isTyping && typedCount >= totalChars && (
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 ml-3 animate-ping" />
+                )}
+              </div>
             </div>
           </h2>
         </motion.div>

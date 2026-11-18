@@ -10,7 +10,7 @@ import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { soundManager } from '@/lib/sound';
 
 export default function Hero() {
-  const { scrollTo } = useSmoothScroll();
+  const { scrollTo, refresh } = useSmoothScroll();
   const heroRef = useRef<HTMLElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
 
@@ -54,13 +54,14 @@ export default function Hero() {
           }
           if (next >= totalHeroChars) {
             setIsTyping(false);
+            if (refresh) refresh();
           }
           return next;
         });
       }, delay);
       return () => clearTimeout(timer);
     }
-  }, [isTyping, typedHeroCount, totalHeroChars]);
+  }, [isTyping, typedHeroCount, totalHeroChars, refresh]);
 
   const getLineProgress = (lineIndex: number) => {
     let charsBefore = 0;
@@ -156,39 +157,68 @@ export default function Hero() {
         {/* Cinematic Headline with Live Typewriter: I TURN MOMENTS INTO MOTION */}
         <div className="flex flex-col leading-[0.92] tracking-tighter">
           {/* Line 1: I TURN (Serif Italic) */}
-          <div className="min-h-[1em] flex items-baseline">
-            <span className="font-serif-editorial text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] text-[#F0F0ED] italic font-light">
-              {getLineProgress(0).visibleText}
+          <div className="relative flex items-baseline">
+            <span
+              aria-hidden="true"
+              className="font-serif-editorial text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] italic font-light opacity-0 select-none pointer-events-none"
+            >
+              {heroLines[0]!.text}
             </span>
-            {getLineProgress(0).showCursor && (
-              <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
-            )}
+            <div className="absolute inset-0 flex items-baseline">
+              <span className="font-serif-editorial text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] text-[#F0F0ED] italic font-light">
+                {getLineProgress(0).visibleText}
+              </span>
+              {getLineProgress(0).showCursor && (
+                <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
+              )}
+            </div>
           </div>
 
           {/* Line 2: MOMENTS (Sans Bold) */}
-          <div className="min-h-[1em] flex items-baseline">
-            <span className="font-sans-body font-black text-6xl sm:text-8xl md:text-9xl lg:text-[10.5rem] text-[#F0F0ED] uppercase tracking-[-0.04em] pl-1 sm:pl-3">
-              {getLineProgress(1).visibleText}
+          <div className="relative flex items-baseline">
+            <span
+              aria-hidden="true"
+              className="font-sans-body font-black text-6xl sm:text-8xl md:text-9xl lg:text-[10.5rem] uppercase tracking-[-0.04em] pl-1 sm:pl-3 opacity-0 select-none pointer-events-none"
+            >
+              {heroLines[1]!.text}
             </span>
-            {getLineProgress(1).showCursor && (
-              <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
-            )}
+            <div className="absolute inset-0 flex items-baseline">
+              <span className="font-sans-body font-black text-6xl sm:text-8xl md:text-9xl lg:text-[10.5rem] text-[#F0F0ED] uppercase tracking-[-0.04em] pl-1 sm:pl-3">
+                {getLineProgress(1).visibleText}
+              </span>
+              {getLineProgress(1).showCursor && (
+                <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
+              )}
+            </div>
           </div>
 
           {/* Line 3 & 4: INTO MOTION. */}
-          <div className="flex flex-wrap items-baseline gap-4 sm:gap-6 min-h-[1em]">
-            <span className="font-serif-editorial text-5xl sm:text-7xl md:text-8xl lg:text-[9.5rem] text-[#A1A1A1] italic font-light">
-              {getLineProgress(2).visibleText}
-            </span>
-            {getLineProgress(2).showCursor && (
-              <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
-            )}
-            <span className="font-sans-body font-black text-6xl sm:text-8xl md:text-9xl lg:text-[10.5rem] text-[#F0F0ED] uppercase tracking-[-0.04em]">
-              {getLineProgress(3).visibleText}
-            </span>
-            {getLineProgress(3).showCursor && (
-              <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
-            )}
+          <div className="relative flex items-baseline">
+            <div
+              aria-hidden="true"
+              className="flex flex-wrap items-baseline gap-4 sm:gap-6 opacity-0 select-none pointer-events-none"
+            >
+              <span className="font-serif-editorial text-5xl sm:text-7xl md:text-8xl lg:text-[9.5rem] italic font-light">
+                {heroLines[2]!.text}
+              </span>
+              <span className="font-sans-body font-black text-6xl sm:text-8xl md:text-9xl lg:text-[10.5rem] uppercase tracking-[-0.04em]">
+                {heroLines[3]!.text}
+              </span>
+            </div>
+            <div className="absolute inset-0 flex flex-wrap items-baseline gap-4 sm:gap-6">
+              <span className="font-serif-editorial text-5xl sm:text-7xl md:text-8xl lg:text-[9.5rem] text-[#A1A1A1] italic font-light">
+                {getLineProgress(2).visibleText}
+              </span>
+              {getLineProgress(2).showCursor && (
+                <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
+              )}
+              <span className="font-sans-body font-black text-6xl sm:text-8xl md:text-9xl lg:text-[10.5rem] text-[#F0F0ED] uppercase tracking-[-0.04em]">
+                {getLineProgress(3).visibleText}
+              </span>
+              {getLineProgress(3).showCursor && (
+                <span className="inline-block w-2.5 sm:w-3.5 h-[0.8em] bg-[#F0F0ED] ml-2 animate-pulse" />
+              )}
+            </div>
           </div>
         </div>
 
