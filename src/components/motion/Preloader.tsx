@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import gsap from 'gsap';
 import { siteConfig } from '@/data/site';
 
 interface PreloaderProps {
@@ -9,105 +10,310 @@ interface PreloaderProps {
 }
 
 export default function Preloader({ onComplete }: PreloaderProps) {
-  const [progress, setProgress] = useState(0);
-  const [isDone, setIsDone] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const chromeRef = useRef<HTMLDivElement>(null);
+  const loadingLabelRef = useRef<HTMLDivElement>(null);
+  const brandNameRef = useRef<HTMLHeadingElement>(null);
+  const progressContainerRef = useRef<HTMLDivElement>(null);
+  const progressBarFillRef = useRef<HTMLDivElement>(null);
+  const progressNumRef = useRef<HTMLSpanElement>(null);
+  const bracketsRef = useRef<HTMLDivElement[]>([]);
+
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Helper to collect corner bracket elements
+  const addBracketRef = (el: HTMLDivElement | null) => {
+    if (el && !bracketsRef.current.includes(el)) {
+      bracketsRef.current.push(el);
+    }
+  };
 
   useEffect(() => {
-    // Check if user already saw preloader in this session
+    // Lock scroll during preloader presentation
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const hasSeen = sessionStorage.getItem('frame_has_loaded');
-    const targetDuration = hasSeen ? 1000 : 2000;
-    const intervalTime = 25;
-    const increment = 100 / (targetDuration / intervalTime);
 
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + increment;
-        if (next >= 100) {
-          clearInterval(timer);
-          setTimeout(() => {
-            setIsDone(true);
-            sessionStorage.setItem('frame_has_loaded', 'true');
-            if (onComplete) onComplete();
-          }, 350);
-          return 100;
-        }
-        return next;
+    // Quick exit for reduced motion
+    if (prefersReducedMotion) {
+      const exitTimer = setTimeout(() => {
+        setIsVisible(false);
+        document.body.style.overflow = originalOverflow;
+        onComplete?.();
+      }, 250);
+      return () => {
+        clearTimeout(exitTimer);
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+
+    const progressDuration = hasSeen ? 0.9 : 1.5;
+
+    // Single Coordinated Master GSAP Timeline
+    const ctx = gsap.context(() => {
+      // 00. Initial Setup
+      gsap.set(overlayRef.current, { opacity: 1, yPercent: 0 });
+      gsap.set(chromeRef.current, { opacity: 0, scale: 1.04, x: 20 });
+      gsap.set(bracketsRef.current, { opacity: 0, scale: 0.9 });
+      gsap.set(loadingLabelRef.current, { opacity: 0, y: 10 });
+      gsap.set(brandNameRef.current, { opacity: 0, y: 18 });
+      gsap.set(progressContainerRef.current, { opacity: 0, y: 8 });
+
+      const masterTl = gsap.timeline({
+        defaults: { ease: 'power2.out' },
       });
-    }, intervalTime);
 
-    return () => clearInterval(timer);
+      // Phase 01: Ambient Chrome Sculpture & Corner Framing Reveal (0.0s - 0.6s)
+      masterTl.to(chromeRef.current, {
+        opacity: 0.95,
+        scale: 1,
+        x: 0,
+        duration: 0.75,
+        ease: 'power2.out',
+      });
+
+      masterTl.to(
+        bracketsRef.current,
+        {
+          opacity: 0.65,
+          scale: 1,
+          duration: 0.5,
+          stagger: 0.04,
+        },
+        '-=0.55'
+      );
+
+      // Phase 02: "LOADING EXPERIENCE" Label Reveal (0.2s - 0.6s)
+      masterTl.to(
+        loadingLabelRef.current,
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.45,
+          ease: 'power2.out',
+        },
+        '-=0.35'
+      );
+
+      // Phase 03: Primary Brand Typography Reveal "MOHAMMAD ZEESHAN" (0.35s - 1.0s)
+      masterTl.to(
+        brandNameRef.current,
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.75,
+          ease: 'power3.out',
+        },
+        '-=0.25'
+      );
+
+      // Reveal Progress Bar Row (0.5s - 0.85s)
+      masterTl.to(
+        progressContainerRef.current,
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.4,
+          ease: 'power2.out',
+        },
+        '-=0.45'
+      );
+
+      // Phase 04: Synchronized Progress Animation (Starts at 0.5s and glides to 100%)
+      const progressState = { value: 0 };
+      masterTl.to(
+        progressState,
+        {
+          value: 100,
+          duration: progressDuration,
+          ease: 'power1.inOut',
+          onUpdate: () => {
+            const currentVal = Math.min(100, Math.round(progressState.value));
+            if (progressBarFillRef.current) {
+              progressBarFillRef.current.style.width = `${currentVal}%`;
+            }
+            if (progressNumRef.current) {
+              progressNumRef.current.textContent = `${currentVal}%`;
+            }
+          },
+        },
+        '-=0.3'
+      );
+
+      // Phase 05: Cinematic Exit Sequence (follows 100% completion in the same timeline)
+      // Brief aesthetic pause
+      masterTl.to({}, { duration: 0.2 });
+
+      // Fade out loading text & progress row
+      masterTl.to(
+        [loadingLabelRef.current, progressContainerRef.current],
+        {
+          opacity: 0,
+          y: -6,
+          duration: 0.3,
+          stagger: 0.03,
+          ease: 'power2.in',
+        }
+      );
+
+      // Subtle upward glide of brand name
+      masterTl.to(
+        brandNameRef.current,
+        {
+          opacity: 0,
+          y: -14,
+          duration: 0.4,
+          ease: 'power3.in',
+        },
+        '-=0.15'
+      );
+
+      // Fade corner brackets
+      masterTl.to(
+        bracketsRef.current,
+        {
+          opacity: 0,
+          scale: 0.96,
+          duration: 0.3,
+          ease: 'power2.in',
+        },
+        '-=0.25'
+      );
+
+      // Fade chrome reflection as curtain lifts
+      masterTl.to(
+        chromeRef.current,
+        {
+          opacity: 0,
+          x: 15,
+          duration: 0.4,
+          ease: 'power2.in',
+        },
+        '-=0.3'
+      );
+
+      // Vertical shutter reveal lifting upward like a camera shutter
+      masterTl.to(
+        overlayRef.current,
+        {
+          yPercent: -100,
+          duration: 0.75,
+          ease: 'power3.inOut',
+          onComplete: () => {
+            sessionStorage.setItem('frame_has_loaded', 'true');
+            document.body.style.overflow = originalOverflow;
+            setIsVisible(false);
+            onComplete?.();
+          },
+        },
+        '-=0.1'
+      );
+    }, overlayRef);
+
+    return () => {
+      ctx.revert();
+      document.body.style.overflow = originalOverflow;
+    };
   }, [onComplete]);
 
+  if (!isVisible) return null;
+
   return (
-    <AnimatePresence>
-      {!isDone && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, y: -40 }}
-          transition={{ duration: 0.85, ease: [0.76, 0, 0.24, 1] }}
-          className="fixed inset-0 z-[10000] bg-[#080808] flex flex-col items-center justify-between p-8 sm:p-14 select-none"
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-[10000] bg-[#070707] flex flex-col items-center justify-center select-none overflow-hidden"
+      role="status"
+      aria-live="polite"
+      aria-label="Loading portfolio experience"
+    >
+      {/* Abstract Metallic Chrome Background Element entering diagonally from top-right */}
+      <div
+        ref={chromeRef}
+        className="absolute top-0 right-0 w-[90vw] sm:w-[70vw] md:w-[55vw] lg:w-[46vw] h-full pointer-events-none overflow-hidden select-none z-0"
+      >
+        <Image
+          src="/assets/branding/preloader-chrome-element.webp"
+          alt="Reflective Chrome Sculpture"
+          fill
+          priority
+          sizes="(max-width: 640px) 90vw, (max-width: 1024px) 55vw, 46vw"
+          className="object-cover object-right-top filter brightness-110 contrast-125 opacity-75 sm:opacity-100 pointer-events-none"
+        />
+        {/* Soft Left Feather to blend seamlessly into the #070707 dark void */}
+        <div className="absolute inset-y-0 left-0 w-32 sm:w-48 bg-gradient-to-r from-[#070707] via-[#070707]/60 to-transparent pointer-events-none" />
+        {/* Top Vignette to blend the top entrance cleanly in portrait viewports */}
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#070707] via-[#070707]/80 to-transparent pointer-events-none" />
+        {/* Bottom Vignette */}
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#070707] to-transparent pointer-events-none" />
+      </div>
+
+      {/* Cinematic Viewfinder Corner Framing Brackets */}
+      {/* Top-Left Bracket */}
+      <div
+        ref={addBracketRef}
+        className="absolute top-6 left-6 sm:top-10 sm:left-10 md:top-12 md:left-12 w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 border-t border-l border-white/40 pointer-events-none z-10"
+      />
+      {/* Top-Right Bracket */}
+      <div
+        ref={addBracketRef}
+        className="absolute top-6 right-6 sm:top-10 sm:right-10 md:top-12 md:right-12 w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 border-t border-r border-white/40 pointer-events-none z-10"
+      />
+      {/* Bottom-Left Bracket */}
+      <div
+        ref={addBracketRef}
+        className="absolute bottom-6 left-6 sm:bottom-10 sm:left-10 md:bottom-12 md:left-12 w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 border-b border-l border-white/40 pointer-events-none z-10"
+      />
+      {/* Bottom-Right Bracket */}
+      <div
+        ref={addBracketRef}
+        className="absolute bottom-6 right-6 sm:bottom-10 sm:right-10 md:bottom-12 md:right-12 w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 border-b border-r border-white/40 pointer-events-none z-10"
+      />
+
+      {/* Center Cinematic Content Composition */}
+      <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 w-full max-w-5xl">
+        {/* Top Centered Secondary Label: LOADING EXPERIENCE */}
+        <div
+          ref={loadingLabelRef}
+          className="font-sans-body text-[9px] sm:text-[11px] md:text-xs uppercase tracking-[0.35em] text-[#A1A1A1] mb-5 sm:mb-8 font-medium"
         >
-          {/* Subtle Ambient Chrome Glow */}
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
-            <div className="w-[600px] h-[300px] bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-transparent rounded-full blur-[120px] -rotate-12" />
+          LOADING EXPERIENCE
+        </div>
+
+        {/* Primary Brand Typography: MOHAMMAD ZEESHAN */}
+        <div className="w-full flex justify-center mb-6 sm:mb-8 overflow-visible">
+          <h1
+            ref={brandNameRef}
+            className="font-sans-body font-bold text-xl sm:text-3xl md:text-4xl lg:text-5xl text-[#F0F0ED] uppercase tracking-[0.2em] sm:tracking-[0.24em] md:tracking-[0.26em] whitespace-nowrap drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] px-2"
+          >
+            {siteConfig.displayName}
+          </h1>
+        </div>
+
+        {/* Minimal Progress Bar & Percentage Counter in One Unified Row */}
+        <div
+          ref={progressContainerRef}
+          className="flex items-center gap-3 sm:gap-4 w-[200px] sm:w-[260px] md:w-[300px]"
+        >
+          {/* Subtle Progress Track with White Fill Line */}
+          <div className="flex-1 h-[2px] bg-white/20 rounded-full overflow-hidden relative">
+            <div
+              ref={progressBarFillRef}
+              className="h-full bg-[#F0F0ED] rounded-full"
+              style={{ width: '0%' }}
+            />
           </div>
 
-          {/* Corner Framing Brackets */}
-          <div className="corner-bracket corner-tl !top-8 !left-8 !w-5 !h-5" />
-          <div className="corner-bracket corner-tr !top-8 !right-8 !w-5 !h-5" />
-          <div className="corner-bracket corner-bl !bottom-8 !left-8 !w-5 !h-5" />
-          <div className="corner-bracket corner-br !bottom-8 !right-8 !w-5 !h-5" />
-
-          {/* Top Metadata Header */}
-          <div className="w-full flex justify-between items-center font-mono-tech text-[10px] text-[#777777] tracking-[0.25em] uppercase z-10">
-            <span>SYS // BOOT_SEQUENCE</span>
-            <span>TC 00:00:00:00</span>
-          </div>
-
-          {/* Center Brand & Progress Line */}
-          <div className="flex flex-col items-center max-w-lg w-full z-10 text-center">
-            {/* Monospace Percentage Counter (Inspired by Ref 09: counter '77') */}
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="font-mono-tech text-6xl sm:text-7xl font-light text-[#F0F0ED] tracking-tight mb-6"
-            >
-              {Math.round(progress).toString().padStart(2, '0')}
-            </motion.div>
-
-            {/* Fine Horizontal Progress Line */}
-            <div className="w-full h-[1px] bg-white/10 relative overflow-hidden mb-8">
-              <motion.div
-                className="absolute top-0 left-0 h-full bg-[#F0F0ED]"
-                style={{ width: `${progress}%` }}
-                transition={{ ease: 'linear' }}
-              />
-            </div>
-
-            {/* Brand Typography Reveal */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="flex flex-col items-center gap-1.5"
-            >
-              <h1 className="font-sans-body font-bold text-sm sm:text-base tracking-[0.35em] text-[#F0F0ED] uppercase">
-                {siteConfig.displayName}
-              </h1>
-              <p className="font-mono-tech text-[10px] tracking-[0.25em] text-[#777777] uppercase">
-                {siteConfig.role}
-              </p>
-            </motion.div>
-          </div>
-
-          {/* Bottom Telemetry Footer */}
-          <div className="w-full flex justify-between items-center font-mono-tech text-[10px] text-[#777777] tracking-[0.25em] uppercase z-10">
-            <span>MUMBAI // 19.0760° N, 72.8777° E</span>
-            <span>FRAME® CINEMATIC SUITE</span>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          {/* Synchronized Percentage Counter */}
+          <span
+            ref={progressNumRef}
+            className="font-sans-body tabular-nums text-[10px] sm:text-xs text-[#A1A1A1] font-medium tracking-wider w-8 text-right select-none"
+          >
+            0%
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
