@@ -54,6 +54,7 @@ export default function ProjectCard({ project, priority = false }: ProjectCardPr
           alt={project.title}
           fill
           priority={priority}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 620px"
           className={`object-cover transition-all duration-700 ${
             isHovered ? 'scale-105 opacity-0' : 'scale-100 opacity-90'
           }`}
