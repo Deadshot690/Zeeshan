@@ -12,6 +12,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Large media files exceeding GitHub 100MB limits
-*.mp4
-*.mov
+scratch/
+
+# Raw uncompressed video footage in src/projects (exceeds GitHub 100MB limits)
+src/projects/**/*.mp4
+src/projects/**/*.mov
