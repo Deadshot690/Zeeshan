@@ -146,9 +146,9 @@ export default function Showreel() {
     e.stopPropagation();
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch(() => {});
+      containerRef.current.requestFullscreen().catch(() => { });
     } else {
-      document.exitFullscreen().catch(() => {});
+      document.exitFullscreen().catch(() => { });
     }
   };
 
@@ -223,9 +223,8 @@ export default function Showreel() {
             <div className="absolute top-4 left-5 right-5 flex items-center justify-between font-mono-tech text-[9px] text-[#A1A1A1]/70 tracking-widest uppercase pointer-events-none z-20">
               <div className="flex items-center gap-2.5">
                 <span
-                  className={`w-2 h-2 rounded-full ${
-                    isPlaying ? 'bg-red-500 animate-pulse' : 'bg-white/40'
-                  }`}
+                  className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-red-500 animate-pulse' : 'bg-white/40'
+                    }`}
                 />
                 <span className="text-[#F0F0ED]/90 font-bold">REC ● [24.00 FPS]</span>
               </div>
@@ -237,9 +236,8 @@ export default function Showreel() {
 
             {/* Center Circular Play Button (Animated out when playing) */}
             <div
-              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 pointer-events-none z-20 ${
-                isPlaying ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
-              }`}
+              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 pointer-events-none z-20 ${isPlaying ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
+                }`}
             >
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/80 bg-black/40 backdrop-blur-md flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-[0_0_35px_rgba(0,0,0,0.8)]">
                 <Play className="w-6 h-6 sm:w-7 sm:h-7 text-[#F0F0ED] fill-[#F0F0ED] translate-x-0.5" />
@@ -248,9 +246,8 @@ export default function Showreel() {
 
             {/* Bottom Integrated Video Controls Bar (Matches Reference 04) */}
             <div
-              className={`absolute bottom-0 inset-x-0 pt-8 pb-4 px-5 sm:px-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col gap-2.5 z-30 transition-opacity duration-300 ${
-                isHovered || isPlaying ? 'opacity-100' : 'opacity-85'
-              }`}
+              className={`absolute bottom-0 inset-x-0 pt-8 pb-4 px-5 sm:px-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col gap-2.5 z-30 transition-opacity duration-300 ${isHovered || isPlaying ? 'opacity-100' : 'opacity-85'
+                }`}
             >
               {/* Primary Controls Row: Play/Pause, Timecode, Scrubber, Volume & Fullscreen */}
               <div className="flex items-center justify-between gap-4 font-mono-tech text-xs text-[#E0E0DC]">

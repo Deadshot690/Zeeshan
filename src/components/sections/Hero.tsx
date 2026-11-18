@@ -240,24 +240,24 @@ export default function Hero() {
           className="mt-10 flex flex-wrap items-center gap-4 pointer-events-auto"
         >
           <MagneticButton
-            onClick={() => scrollTo('#showreel')}
+            onClick={() => scrollTo('#selected-work')}
             strength={0.3}
             dataCursor="EXPLORE"
             className="px-8 py-4 rounded-full bg-[#F0F0ED] text-[#080808] font-mono-tech text-xs font-bold tracking-[0.2em] uppercase hover:bg-white transition-all shadow-[0_0_30px_rgba(255,255,255,0.15)] group"
           >
             <span className="flex items-center gap-3">
-              EXPLORE SHOWREEL
+              EXPLORE SELECTED WORK
               <ArrowDownRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:translate-y-0.5 transition-transform" />
             </span>
           </MagneticButton>
 
           <MagneticButton
-            onClick={() => scrollTo('#behind-the-edit')}
+            onClick={() => scrollTo('#showreel')}
             strength={0.3}
-            dataCursor="PROCESS"
+            dataCursor="WATCH"
             className="px-6 py-4 rounded-full border border-white/15 bg-white/[0.03] text-[#F0F0ED] font-mono-tech text-xs tracking-[0.2em] uppercase hover:border-white/40 hover:bg-white/[0.08] transition-all"
           >
-            BEHIND THE EDIT
+            WATCH SHOWREEL
           </MagneticButton>
         </motion.div>
       </motion.div>

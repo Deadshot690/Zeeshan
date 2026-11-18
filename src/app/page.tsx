@@ -8,7 +8,7 @@ import Navbar from '@/components/layout/Navbar';
 import Hero from '@/components/sections/Hero';
 import Philosophy from '@/components/sections/Philosophy';
 import Showreel from '@/components/sections/Showreel';
-import BehindTheEdit from '@/components/sections/BehindTheEdit';
+import SelectedWork from '@/components/sections/SelectedWork';
 import Capabilities from '@/components/sections/Capabilities';
 import About from '@/components/sections/About';
 import Contact from '@/components/sections/Contact';
@@ -45,8 +45,8 @@ export default function HomePage() {
         {/* Section 03: Master Showreel */}
         <Showreel />
 
-        {/* Section 04: Behind the Edit (Raw vs. Refined & NLE Timeline) */}
-        <BehindTheEdit />
+        {/* Section 04: Selected Works Archive Gallery */}
+        <SelectedWork />
 
         {/* Section 05: Capabilities (Core Disciplines) */}
         <Capabilities />

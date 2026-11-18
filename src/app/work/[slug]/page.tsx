@@ -37,11 +37,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         {/* Navigation Back Link */}
         <div className="mb-10">
           <Link
-            href="/"
+            href="/#selected-work"
             className="inline-flex items-center gap-2 font-mono-tech text-xs tracking-[0.2em] uppercase text-[#A1A1A1] hover:text-[#F0F0ED] transition-colors py-2 group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span>RETURN TO HOME</span>
+            <span>RETURN TO SELECTED WORK</span>
           </Link>
         </div>
 

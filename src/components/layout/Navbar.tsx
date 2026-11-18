@@ -31,8 +31,8 @@ export default function Navbar() {
   };
 
   const navLinks = [
+    { label: 'WORK', href: '#selected-work' },
     { label: 'SHOWREEL', href: '#showreel' },
-    { label: 'PROCESS', href: '#behind-the-edit' },
     { label: 'CAPABILITIES', href: '#capabilities' },
     { label: 'ABOUT', href: '#about' },
     { label: 'CONTACT', href: '#contact' },

@@ -81,18 +81,18 @@ export default function Footer() {
               HOME
             </a>
             <a
+              href="#selected-work"
+              onClick={(e) => handleLinkClick(e, '#selected-work')}
+              className="hover:text-[#F0F0ED] transition-colors"
+            >
+              SELECTED WORK
+            </a>
+            <a
               href="#showreel"
               onClick={(e) => handleLinkClick(e, '#showreel')}
               className="hover:text-[#F0F0ED] transition-colors"
             >
               SHOWREEL
-            </a>
-            <a
-              href="#behind-the-edit"
-              onClick={(e) => handleLinkClick(e, '#behind-the-edit')}
-              className="hover:text-[#F0F0ED] transition-colors"
-            >
-              POST-PRODUCTION PROCESS
             </a>
             <a
               href="#capabilities"
