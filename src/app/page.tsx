@@ -8,7 +8,6 @@ import Navbar from '@/components/layout/Navbar';
 import Hero from '@/components/sections/Hero';
 import Philosophy from '@/components/sections/Philosophy';
 import Showreel from '@/components/sections/Showreel';
-import SelectedWork from '@/components/sections/SelectedWork';
 import BehindTheEdit from '@/components/sections/BehindTheEdit';
 import Capabilities from '@/components/sections/Capabilities';
 import About from '@/components/sections/About';
@@ -37,32 +36,29 @@ export default function HomePage() {
 
       {/* Main Single-Take Cinematic Experience */}
       <main className="relative w-full overflow-hidden bg-[#080808]">
-        {/* 03. Interactive 3D Hero */}
+        {/* Section 01: Interactive 3D Hero */}
         <Hero />
 
-        {/* 04. Creative Philosophy / Kinetic Typography */}
+        {/* Section 02: Creative Philosophy / Kinetic Typography */}
         <Philosophy />
 
-        {/* 05. Master Showreel */}
+        {/* Section 03: Master Showreel */}
         <Showreel />
 
-        {/* 06. Selected Works Archive Gallery */}
-        <SelectedWork />
-
-        {/* 07. Behind the Edit (Raw vs. Refined & NLE Timeline) */}
+        {/* Section 04: Behind the Edit (Raw vs. Refined & NLE Timeline) */}
         <BehindTheEdit />
 
-        {/* 08. Capabilities (6 Core Disciplines) */}
+        {/* Section 05: Capabilities (Core Disciplines) */}
         <Capabilities />
 
-        {/* 09. About the Editor */}
+        {/* Section 06: About the Editor */}
         <About />
 
-        {/* 10. Contact Inquiries & Direct Triggers */}
+        {/* Section 07: Contact Inquiries & Direct Triggers */}
         <Contact />
       </main>
 
-      {/* 11. Footer */}
+      {/* Footer */}
       <Footer />
     </>
   );

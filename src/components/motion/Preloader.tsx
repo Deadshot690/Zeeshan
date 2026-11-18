@@ -87,7 +87,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
         '-=0.35'
       );
 
-      // Phase 03: Primary Brand Typography Reveal "MOHAMMAD ZEESHAN" (0.35s - 1.0s)
+      // Phase 03: Primary Brand Typography Reveal "ZEESHAN" (0.35s - 1.0s)
       masterTl.to(
         '.preloader-brand',
         {
@@ -253,7 +253,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
           LOADING EXPERIENCE
         </div>
 
-        {/* Primary Brand Typography: MOHAMMAD ZEESHAN */}
+        {/* Primary Brand Typography: ZEESHAN */}
         <div className="w-full flex justify-center mb-6 sm:mb-8 overflow-visible">
           <h1 className="preloader-brand font-sans-body font-bold text-xl sm:text-3xl md:text-4xl lg:text-5xl text-[#F0F0ED] uppercase tracking-[0.2em] sm:tracking-[0.24em] md:tracking-[0.26em] whitespace-nowrap drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] px-2">
             {siteConfig.displayName}

@@ -37,7 +37,7 @@ export default function Contact() {
         {/* Section Index Header */}
         <div className="flex items-center justify-between font-mono-tech text-[10px] text-[#777777] tracking-[0.25em] uppercase mb-16 border-b border-white/[0.08] pb-4">
           <div className="flex items-center gap-3">
-            <span>SEC 08 // COLLABORATION & INQUIRIES</span>
+            <span>SEC 07 // COLLABORATION & INQUIRIES</span>
             <span className="text-[#A1A1A1]">LET&apos;S TALK</span>
           </div>
           <div>

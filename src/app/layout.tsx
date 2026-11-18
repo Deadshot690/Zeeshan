@@ -39,8 +39,8 @@ export const metadata: Metadata = {
   title: `${siteConfig.displayName} — ${siteConfig.role}`,
   description: siteConfig.summary,
   keywords: [
-    'Mohammad Zeeshan',
-    'Mohammad Zeeshan Rafik Shaikh',
+    'Zeeshan',
+    'Zeeshan Rafik Shaikh',
     'Video Editor',
     'Short-form content specialist',
     'YouTube video editor',

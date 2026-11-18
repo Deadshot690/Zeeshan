@@ -81,11 +81,11 @@ export default function Footer() {
               HOME
             </a>
             <a
-              href="#selected-work"
-              onClick={(e) => handleLinkClick(e, '#selected-work')}
+              href="#showreel"
+              onClick={(e) => handleLinkClick(e, '#showreel')}
               className="hover:text-[#F0F0ED] transition-colors"
             >
-              SELECTED WORK
+              SHOWREEL
             </a>
             <a
               href="#behind-the-edit"

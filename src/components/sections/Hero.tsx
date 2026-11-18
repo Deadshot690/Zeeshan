@@ -127,7 +127,7 @@ export default function Hero() {
           <span>ACES COLOR</span>
         </div>
         <div>
-          <span>SEC 01/08</span>
+          <span>SEC 01/07</span>
         </div>
       </div>
 
@@ -240,24 +240,24 @@ export default function Hero() {
           className="mt-10 flex flex-wrap items-center gap-4 pointer-events-auto"
         >
           <MagneticButton
-            onClick={() => scrollTo('#selected-work')}
+            onClick={() => scrollTo('#showreel')}
             strength={0.3}
             dataCursor="EXPLORE"
             className="px-8 py-4 rounded-full bg-[#F0F0ED] text-[#080808] font-mono-tech text-xs font-bold tracking-[0.2em] uppercase hover:bg-white transition-all shadow-[0_0_30px_rgba(255,255,255,0.15)] group"
           >
             <span className="flex items-center gap-3">
-              EXPLORE SELECTED WORK
+              EXPLORE SHOWREEL
               <ArrowDownRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:translate-y-0.5 transition-transform" />
             </span>
           </MagneticButton>
 
           <MagneticButton
-            onClick={() => scrollTo('#showreel')}
+            onClick={() => scrollTo('#behind-the-edit')}
             strength={0.3}
-            dataCursor="WATCH"
+            dataCursor="PROCESS"
             className="px-6 py-4 rounded-full border border-white/15 bg-white/[0.03] text-[#F0F0ED] font-mono-tech text-xs tracking-[0.2em] uppercase hover:border-white/40 hover:bg-white/[0.08] transition-all"
           >
-            WATCH SHOWREEL
+            BEHIND THE EDIT
           </MagneticButton>
         </motion.div>
       </motion.div>

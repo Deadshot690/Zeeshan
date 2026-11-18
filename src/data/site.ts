@@ -1,8 +1,8 @@
 import { SiteConfig, CapabilityItem } from '@/types';
 
 export const siteConfig: SiteConfig = {
-  brandName: 'MOHAMMAD ZEESHAN RAFIK SHAIKH',
-  displayName: 'MOHAMMAD ZEESHAN',
+  brandName: 'ZEESHAN RAFIK SHAIKH',
+  displayName: 'ZEESHAN',
   role: 'VIDEO EDITOR | SHORT-FORM CONTENT SPECIALIST',
   title: 'Video Editor & Short-Form Content Specialist',
   location: 'Mumbai, Maharashtra, India',

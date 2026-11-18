@@ -166,13 +166,13 @@ export default function BehindTheEdit() {
         <div className="w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-14">
           {/* LEFT COLUMN: Section Indicator, Heading & Description (~28% on desktop) */}
           <div className="w-full lg:w-[28%] flex flex-col justify-start flex-shrink-0">
-            {/* Section Indicator: 05 /11 */}
+            {/* Section Indicator: 04 /07 */}
             <div className="bte-indicator flex flex-col gap-1 mb-8 sm:mb-10 pointer-events-none">
               <span className="font-mono-tech text-xs sm:text-sm font-semibold text-[#F0F0ED] tracking-widest">
-                05
+                04
               </span>
               <span className="font-mono-tech text-[10px] sm:text-xs text-[#777777] tracking-widest">
-                /11
+                /07
               </span>
             </div>
 

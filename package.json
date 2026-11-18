@@ -2,7 +2,7 @@
   "name": "zeeshan-portfolio",
   "version": "1.0.0",
   "private": true,
-  "description": "FRAME® — Premium Cinematic Video Editor Portfolio for Mohammad Zeeshan",
+  "description": "FRAME® — Premium Cinematic Video Editor Portfolio for Zeeshan",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

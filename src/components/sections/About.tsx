@@ -16,10 +16,10 @@ export default function About() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 pb-6 border-b border-white/[0.08]">
           <div>
             <div className="flex items-center gap-3 font-mono-tech text-[10px] text-[#777777] tracking-[0.25em] uppercase mb-2">
-              <span>SEC 07 // BIOGRAPHY & PROFILE</span>
+              <span>SEC 06 // BIOGRAPHY & PROFILE</span>
               <span>INDEX: PERS // ZEESHAN</span>
             </div>
-            {/* Main Header: ABOUT (with Mohammad Zeeshan removed per user request) */}
+            {/* Main Header: ABOUT */}
             <h2 className="font-sans-body font-black text-4xl sm:text-6xl md:text-7xl uppercase text-[#F0F0ED] tracking-tight">
               ABOUT
             </h2>
@@ -143,10 +143,10 @@ export default function About() {
               <div className="corner-bracket corner-bl !bottom-3 !left-3" />
               <div className="corner-bracket corner-br !bottom-3 !right-3" />
 
-              {/* Authentic Editorial Portrait of Mohammad Zeeshan (Balanced framing: hair preserved, face centered) */}
+              {/* Authentic Editorial Portrait of Zeeshan (Balanced framing: hair preserved, face centered) */}
               <Image
                 src="/assets/branding/zeeshan.jpg"
-                alt="Mohammad Zeeshan Rafik Shaikh Portrait"
+                alt="Zeeshan Rafik Shaikh Portrait"
                 fill
                 priority
                 className="object-cover object-[center_40%] filter grayscale contrast-[1.25] brightness-[0.95] group-hover:scale-105 group-hover:contrast-[1.3] transition-all duration-700 ease-out"
