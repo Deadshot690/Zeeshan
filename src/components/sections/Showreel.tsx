@@ -19,17 +19,52 @@ export default function Showreel() {
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const userManuallyPausedRef = useRef(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Default muted to ensure flawless instant browser autoplay
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(168); // 2:48 as shown in reference
+  const [duration, setDuration] = useState(55.5);
   const [isHovered, setIsHovered] = useState(false);
+
+  // Playback helper functions
+  const attemptPlay = (force = false) => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (!force && userManuallyPausedRef.current) return;
+
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch(() => {
+          // If browser blocked unmuted autoplay, mute and resume automatically
+          video.muted = true;
+          setIsMuted(true);
+          video
+            .play()
+            .then(() => setIsPlaying(true))
+            .catch(() => {});
+        });
+    }
+  };
+
+  const pauseVideo = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.pause();
+    setIsPlaying(false);
+  };
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
 
     const onTimeUpdate = () => {
       setCurrentTime(video.currentTime);
@@ -42,23 +77,20 @@ export default function Showreel() {
       }
     };
 
-    const onEnded = () => {
-      setIsPlaying(false);
-      setProgress(100);
-    };
-
+    video.addEventListener('play', onPlay);
+    video.addEventListener('pause', onPause);
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('loadedmetadata', onLoadedMetadata);
-    video.addEventListener('ended', onEnded);
 
     return () => {
+      video.removeEventListener('play', onPlay);
+      video.removeEventListener('pause', onPause);
       video.removeEventListener('timeupdate', onTimeUpdate);
       video.removeEventListener('loadedmetadata', onLoadedMetadata);
-      video.removeEventListener('ended', onEnded);
     };
   }, [duration]);
 
-  // GSAP Choreographed Section Entrance & Scroll Interactions
+  // GSAP Choreographed Section Entrance & Scroll Interactions + Autoplay
   useEffect(() => {
     if (!sectionRef.current) return;
 
@@ -72,7 +104,7 @@ export default function Showreel() {
         defaults: { ease: 'power3.out' },
       });
 
-      // 1. Section Indicator: 03 /11
+      // 1. Section Indicator: 03 /07
       tl.fromTo(
         '.showreel-indicator',
         { opacity: 0, y: -12 },
@@ -114,6 +146,27 @@ export default function Showreel() {
         y: -30,
         ease: 'none',
       });
+
+      // Directly play video when user arrives on Showreel section
+      ScrollTrigger.create({
+        trigger: sectionRef.current,
+        start: 'top 65%',
+        end: 'bottom 20%',
+        onEnter: () => {
+          attemptPlay();
+        },
+        onEnterBack: () => {
+          attemptPlay();
+        },
+        onLeave: () => {
+          pauseVideo();
+          userManuallyPausedRef.current = false; // Reset so next visit autoplays
+        },
+        onLeaveBack: () => {
+          pauseVideo();
+          userManuallyPausedRef.current = false; // Reset so next visit autoplays
+        },
+      });
     }, sectionRef);
 
     return () => ctx.revert();
@@ -126,7 +179,9 @@ export default function Showreel() {
     if (isPlaying) {
       video.pause();
       setIsPlaying(false);
+      userManuallyPausedRef.current = true;
     } else {
+      userManuallyPausedRef.current = false;
       video
         .play()
         .then(() => setIsPlaying(true))
@@ -211,6 +266,7 @@ export default function Showreel() {
               src={siteConfig.showreel.videoSrc}
               poster={siteConfig.showreel.posterSrc}
               playsInline
+              loop
               muted={isMuted}
               preload="metadata"
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.015]"
@@ -275,13 +331,21 @@ export default function Showreel() {
 
                 {/* Right Controls: Mute & Fullscreen */}
                 <div className="flex items-center gap-3 text-[#A1A1A1]">
+                  {isMuted && isPlaying && (
+                    <span
+                      onClick={toggleMute}
+                      className="hidden sm:inline font-mono-tech text-[10px] text-amber-300 tracking-wider cursor-pointer hover:underline"
+                    >
+                      MUTED (CLICK TO UNMUTE)
+                    </span>
+                  )}
                   <button
                     onClick={toggleMute}
                     className="p-1 hover:text-[#F0F0ED] transition-colors cursor-pointer"
                     aria-label={isMuted ? 'Unmute' : 'Mute'}
                   >
                     {isMuted ? (
-                      <VolumeX className="w-4 h-4 text-red-400" />
+                      <VolumeX className="w-4 h-4 text-amber-400" />
                     ) : (
                       <Volume2 className="w-4 h-4" />
                     )}

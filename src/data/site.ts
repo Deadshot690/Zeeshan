@@ -56,7 +56,7 @@ export const siteConfig: SiteConfig = {
     aspectRatio: '21/9',
     headline: 'SHOWREEL',
     supportingCopy: 'A curated selection of my work.',
-    timecode: '01:24:67',
+    timecode: '00:55:00',
   },
 };
 
