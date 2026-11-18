@@ -9,31 +9,24 @@ const chromePath = 'C:\\Users\\juned\\AppData\\Local\\Google\\Chrome\\Applicatio
   });
   const page = await browser.newPage();
   
-  // Forward browser console logs
-  page.on('console', msg => console.log('BROWSER CONSOLE:', msg.type(), msg.text()));
+  const warnings = [];
+  page.on('console', msg => {
+    if (msg.type() === 'warn' || msg.type() === 'error') {
+      warnings.push(`[${msg.type().toUpperCase()}] ${msg.text()}`);
+    }
+  });
 
-  console.log('Opening http://localhost:3001...');
+  console.log('Testing http://localhost:3001 (fresh dev server)...');
   await page.goto('http://localhost:3001', { waitUntil: 'domcontentloaded' });
-  await new Promise(r => setTimeout(r, 4000));
+  await new Promise(r => setTimeout(r, 4500));
 
   await page.evaluate(() => {
     const el = document.getElementById('showreel');
     if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' });
   });
 
-  await page.evaluate(() => {
-    const v = document.querySelector('#showreel video');
-    if (!v) return;
-    const events = ['waiting', 'stalled', 'pause', 'play', 'playing', 'error', 'seeking', 'seeked', 'suspend'];
-    events.forEach(name => {
-      v.addEventListener(name, () => {
-        console.log(`[VIDEO EVENT] ${name} at currentTime=${v.currentTime.toFixed(2)}s, readyState=${v.readyState}, networkState=${v.networkState}`);
-      });
-    });
-  });
-
-  console.log('Observing video events for 15 seconds...');
-  for (let i = 0; i < 15; i++) {
+  // Observe playback for 6 seconds
+  for (let i = 0; i < 6; i++) {
     await new Promise(r => setTimeout(r, 1000));
     const status = await page.evaluate(() => {
       const v = document.querySelector('#showreel video');
@@ -42,10 +35,18 @@ const chromePath = 'C:\\Users\\juned\\AppData\\Local\\Google\\Chrome\\Applicatio
         currentTime: v.currentTime.toFixed(2),
         paused: v.paused,
         readyState: v.readyState,
-        bufferedRanges: v.buffered.length > 0 ? `${v.buffered.start(0).toFixed(1)} - ${v.buffered.end(0).toFixed(1)}` : 'none'
+        buffered: v.buffered.length > 0 ? `${v.buffered.start(0).toFixed(1)} - ${v.buffered.end(0).toFixed(1)}s` : 'none'
       };
     });
-    console.log(`Second ${i + 1}:`, status);
+    console.log(`Playback second ${i + 1}:`, status);
+  }
+
+  console.log('\nLogged warnings & errors count:', warnings.length);
+  if (warnings.length > 0) {
+    console.log('Warnings/Errors found:');
+    warnings.forEach(w => console.log('  ', w));
+  } else {
+    console.log('Zero warnings or errors logged!');
   }
 
   await browser.close();
