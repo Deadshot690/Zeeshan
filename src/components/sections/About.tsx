@@ -4,6 +4,52 @@ import React from 'react';
 import Image from 'next/image';
 import { Briefcase, GraduationCap, Cpu, MapPin, CheckCircle2 } from 'lucide-react';
 import { siteConfig } from '@/data/site';
+import { soundManager } from '@/lib/sound';
+
+const SOFTWARE_TOOLS = [
+  {
+    name: 'Adobe Premiere Pro',
+    abbreviation: 'Pr',
+    role: 'Multi-Track Assembly & Pacing',
+    badge: 'PRIMARY NLE',
+    experience: '4+ Years',
+    color: '#9999FF',
+    bgGradient: 'from-[#9999FF]/12 via-[#9999FF]/[0.02] to-transparent',
+    borderColor: 'group-hover:border-[#9999FF]/60',
+    shadowColor: 'group-hover:shadow-[0_12px_36px_rgba(153,153,255,0.2)]',
+    accentText: 'text-[#9999FF]',
+    accentBg: 'bg-[#9999FF]/10',
+    logoType: 'pr' as const,
+  },
+  {
+    name: 'Adobe After Effects',
+    abbreviation: 'Ae',
+    role: 'Motion Graphics & Visual Effects',
+    badge: 'VFX & MOTION',
+    experience: '4+ Years',
+    color: '#D1A2F7',
+    bgGradient: 'from-[#D1A2F7]/12 via-[#D1A2F7]/[0.02] to-transparent',
+    borderColor: 'group-hover:border-[#D1A2F7]/60',
+    shadowColor: 'group-hover:shadow-[0_12px_36px_rgba(209,162,247,0.2)]',
+    accentText: 'text-[#D1A2F7]',
+    accentBg: 'bg-[#D1A2F7]/10',
+    logoType: 'ae' as const,
+  },
+  {
+    name: 'CapCut',
+    abbreviation: 'CC',
+    role: 'High-Retention Short-Form & Viral Pacing',
+    badge: 'VIRAL FORMATS',
+    experience: '3+ Years',
+    color: '#00F2EA',
+    bgGradient: 'from-[#00F2EA]/12 via-[#00F2EA]/[0.02] to-transparent',
+    borderColor: 'group-hover:border-[#00F2EA]/60',
+    shadowColor: 'group-hover:shadow-[0_12px_36px_rgba(0,242,234,0.2)]',
+    accentText: 'text-[#00F2EA]',
+    accentBg: 'bg-[#00F2EA]/10',
+    logoType: 'capcut' as const,
+  },
+];
 
 export default function About() {
   return (
@@ -114,20 +160,97 @@ export default function About() {
               </div>
             </div>
 
-            {/* Software Proficiency */}
-            <div>
-              <span className="font-mono-tech text-xs tracking-widest text-[#777777] uppercase block mb-3 flex items-center gap-2">
-                <Cpu className="w-3.5 h-3.5 text-[#F0F0ED]" />
-                <span>SOFTWARE PROFICIENCY</span>
-              </span>
-              <div className="flex flex-wrap gap-3">
-                {siteConfig.software.map((sw) => (
+            {/* Software Proficiency — Expanded High-Impact Interactive Showcase */}
+            <div className="pt-8 border-t border-white/[0.08]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+                <span className="font-mono-tech text-xs tracking-widest text-[#A1A1A1] uppercase flex items-center gap-2 font-medium">
+                  <Cpu className="w-4 h-4 text-[#F0F0ED] animate-pulse" />
+                  <span>SOFTWARE PROFICIENCY</span>
+                  <span className="text-[#444444]">//</span>
+                  <span className="text-[#777777] text-[10px]">PRODUCTION TOOLKIT</span>
+                </span>
+                <span className="font-mono-tech text-[10px] text-emerald-400/90 tracking-widest uppercase flex items-center gap-1.5 self-start sm:self-auto">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  HARDWARE ACCELERATED
+                </span>
+              </div>
+
+              {/* 3 Prominent Interactive Software Cards with Authentic Logos & Dynamic Glow */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                {SOFTWARE_TOOLS.map((tool) => (
                   <div
-                    key={sw}
-                    className="px-4 py-2 rounded border border-white/10 bg-white/[0.03] font-mono-tech text-xs tracking-wider uppercase text-[#F0F0ED] flex items-center gap-2"
+                    key={tool.name}
+                    onMouseEnter={() => soundManager.playHover()}
+                    onClick={() => soundManager.playClick()}
+                    className={`group relative p-4.5 sm:p-5 rounded-xl border border-white/[0.1] bg-[#0c0c0c] hover:bg-[#121212] transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer shadow-[0_8px_24px_rgba(0,0,0,0.5)] ${tool.borderColor} ${tool.shadowColor} hover:-translate-y-1.5`}
                   >
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400/80" />
-                    <span>{sw}</span>
+                    {/* Ambient Radial Accent Glow on Hover */}
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-b ${tool.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`}
+                    />
+
+                    {/* Corner Reticle */}
+                    <div className="absolute top-2.5 right-2.5 w-1.5 h-1.5 border-t border-r border-white/20 group-hover:border-white/60 transition-colors pointer-events-none" />
+
+                    {/* Top Row: Logo & Category Badge */}
+                    <div className="relative z-10 flex items-center justify-between gap-3 mb-4">
+                      {/* Authentic Tool Logo Badge */}
+                      {tool.logoType === 'pr' && (
+                        <div className="relative w-12 h-12 rounded-xl bg-[#00005B] border border-[#9999FF]/60 flex items-center justify-center shadow-[0_0_18px_rgba(153,153,255,0.3)] group-hover:scale-105 group-hover:shadow-[0_0_26px_rgba(153,153,255,0.55)] transition-all duration-300 flex-shrink-0">
+                          <span className="font-sans-body font-black text-2xl text-[#9999FF] tracking-tighter leading-none select-none">
+                            Pr
+                          </span>
+                        </div>
+                      )}
+                      {tool.logoType === 'ae' && (
+                        <div className="relative w-12 h-12 rounded-xl bg-[#00005B] border border-[#D1A2F7]/60 flex items-center justify-center shadow-[0_0_18px_rgba(209,162,247,0.3)] group-hover:scale-105 group-hover:shadow-[0_0_26px_rgba(209,162,247,0.55)] transition-all duration-300 flex-shrink-0">
+                          <span className="font-sans-body font-black text-2xl text-[#D1A2F7] tracking-tighter leading-none select-none">
+                            Ae
+                          </span>
+                        </div>
+                      )}
+                      {tool.logoType === 'capcut' && (
+                        <div className="relative w-12 h-12 rounded-xl bg-[#070707] border border-[#00F2EA]/60 flex items-center justify-center shadow-[0_0_18px_rgba(0,242,234,0.3)] group-hover:scale-105 group-hover:shadow-[0_0_26px_rgba(0,242,234,0.55)] transition-all duration-300 flex-shrink-0">
+                          <svg
+                            className="w-7 h-7 text-[#00F2EA] group-hover:scale-105 transition-transform duration-300"
+                            viewBox="0 0 25 24"
+                            fill="currentColor"
+                          >
+                            <path d="M24.189 6.442V2.671l-4.535 2.383V4.91c.002-1.505-1.078-2.411-2.638-2.411H2.64C.993 2.5 0 3.407 0 4.91V8.72L6.354 12 0 15.316v3.8C0 20.595 1 21.5 2.64 21.5h14.373c1.56 0 2.639-.907 2.639-2.382v-.197l4.536 2.409v-3.828L13.64 12 24.19 6.443zM9.982 13.873l7.797 4.083H2.157l7.825-4.083zm7.741-7.828l-7.742 4.057-7.825-4.057h15.567z" />
+                          </svg>
+                        </div>
+                      )}
+
+                      <span
+                        className={`font-mono-tech text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-white/10 ${tool.accentBg} ${tool.accentText}`}
+                      >
+                        {tool.badge}
+                      </span>
+                    </div>
+
+                    {/* Tool Name & Specialty Role */}
+                    <div className="relative z-10 flex flex-col gap-1">
+                      <h4 className="font-sans-body font-bold text-sm sm:text-base text-[#F0F0ED] uppercase tracking-tight group-hover:text-white transition-colors">
+                        {tool.name}
+                      </h4>
+                      <p className="font-mono-tech text-[11px] text-[#A1A1A1] leading-snug tracking-normal">
+                        {tool.role}
+                      </p>
+                    </div>
+
+                    {/* Bottom Status / Experience Footer */}
+                    <div className="relative z-10 mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between font-mono-tech text-[10px] text-[#777777]">
+                      <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>ACTIVE</span>
+                      </span>
+                      <span className="text-[#A1A1A1] font-medium">{tool.experience}</span>
+                    </div>
+
+                    {/* Moving Sheen Line Animation on Hover */}
+                    <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700 overflow-hidden">
+                      <div className="w-[120%] h-full bg-gradient-to-r from-transparent via-white/[0.08] to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+                    </div>
                   </div>
                 ))}
               </div>

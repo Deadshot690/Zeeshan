@@ -10,8 +10,8 @@ export const siteConfig: SiteConfig = {
   contact: {
     phone: '+91 8237547886',
     phoneHref: 'tel:+918237547886',
-    email: 'epicinfiniteplayz@gmail.com',
-    emailHref: 'mailto:epicinfiniteplayz@gmail.com',
+    email: 'zeeshanedits14@gmail.com',
+    emailHref: 'mailto:zeeshanedits14@gmail.com',
     whatsappHref: 'https://wa.me/918237547886',
   },
   summary:
