@@ -82,18 +82,8 @@ export const capabilities: CapabilityItem[] = [
     software: ['Adobe After Effects'],
   },
   {
-    id: 'sound-design',
-    number: '03',
-    title: 'Sound Design',
-    subtitle: 'Audio Synchronization & Sonic Depth',
-    description:
-      'Immersive audio sculpting, multi-track waveform layering, impact sound design, dialogue enhancement, and beat-matched cuts that elevate the emotional arc of every frame.',
-    deliverables: ['Beat Synchronization', 'Audio Stem Mixing', 'Impact & Riser SFX', 'Atmospheric Ambience'],
-    software: ['Premiere Pro Audio Suite', 'Audition'],
-  },
-  {
     id: 'color-grading',
-    number: '04',
+    number: '03',
     title: 'Color Grading',
     subtitle: 'Cinematic Looks & Tone Science',
     description:
@@ -103,22 +93,12 @@ export const capabilities: CapabilityItem[] = [
   },
   {
     id: 'visual-effects',
-    number: '05',
+    number: '04',
     title: 'Visual Effects',
     subtitle: 'Compositing & Seamless Illusions',
     description:
       'Speed ramps, rotoscoping, clean plate reconstruction, mask transitions, particle accents, and invisible visual effects that serve the story without distracting the viewer.',
     deliverables: ['Seamless Mask Transitions', 'Speed Ramps & Retiming', 'Object Isolation & Tracking', 'Atmospheric Particles'],
     software: ['Adobe After Effects', 'Premiere Pro'],
-  },
-  {
-    id: 'visual-storytelling',
-    number: '06',
-    title: 'Visual Storytelling',
-    subtitle: 'Retention Architecture & Hook Engineering',
-    description:
-      'Hook formulation, narrative progression, pattern interrupts, and audience psychology designed to convert passive scrollers into invested, active viewers who watch till the end.',
-    deliverables: ['First 3-Second Hook Design', 'Pattern Interrupt Strategy', 'Emotional Pacing Arc', 'Retention Optimization'],
-    software: ['Editorial Framework', 'Creative Direction'],
   },
 ];

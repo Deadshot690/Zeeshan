@@ -21,7 +21,7 @@ export default function Capabilities() {
           <div>
             <div className="flex items-center gap-3 font-mono-tech text-[10px] text-[#777777] tracking-[0.25em] uppercase mb-2">
               <span>SEC 06 // TECHNICAL EXPERTISE</span>
-              <span>INDEX: 01 – 06</span>
+              <span>INDEX: 01 – {capabilities.length.toString().padStart(2, '0')}</span>
             </div>
             <h2 className="font-sans-body font-black text-4xl sm:text-6xl md:text-7xl uppercase text-[#F0F0ED] tracking-tight">
               CAPABILITIES.
