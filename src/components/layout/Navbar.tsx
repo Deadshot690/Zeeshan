@@ -23,19 +23,27 @@ export default function Navbar() {
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, target: string) => {
-    if (target.startsWith('#')) {
+    const hash = target.includes('#') ? `#${target.split('#')[1]}` : target;
+    if (typeof window !== 'undefined' && window.location.pathname === '/') {
+      if (hash.startsWith('#')) {
+        e.preventDefault();
+        scrollTo(hash);
+        setMobileMenuOpen(false);
+      }
+    } else {
+      // If on subpage (e.g. /work/[slug]), navigate back to home section
       e.preventDefault();
-      scrollTo(target);
+      window.location.href = `/${hash}`;
       setMobileMenuOpen(false);
     }
   };
 
   const navLinks = [
-    { label: 'WORK', href: '#selected-work' },
-    { label: 'SHOWREEL', href: '#showreel' },
-    { label: 'CAPABILITIES', href: '#capabilities' },
-    { label: 'ABOUT', href: '#about' },
-    { label: 'CONTACT', href: '#contact' },
+    { label: 'SELECTED WORKS', href: '/#selected-work' },
+    { label: 'SHOWREEL', href: '/#showreel' },
+    { label: 'CAPABILITIES', href: '/#capabilities' },
+    { label: 'ABOUT', href: '/#about' },
+    { label: 'CONTACT', href: '/#contact' },
   ];
 
   return (
