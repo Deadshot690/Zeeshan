@@ -22,11 +22,15 @@ export default function Showreel() {
   const userManuallyPausedRef = useRef(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [isMuted, setIsMuted] = useState(true); // Default muted to ensure flawless instant browser autoplay
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(55.5);
   const [isHovered, setIsHovered] = useState(false);
+
+  const durationRef = useRef(duration);
+  durationRef.current = duration;
 
   // Playback helper functions
   const attemptPlay = (force = false) => {
@@ -39,6 +43,7 @@ export default function Showreel() {
       playPromise
         .then(() => {
           setIsPlaying(true);
+          setIsBuffering(false);
         })
         .catch(() => {
           // If browser blocked unmuted autoplay, mute and resume automatically
@@ -46,7 +51,10 @@ export default function Showreel() {
           setIsMuted(true);
           video
             .play()
-            .then(() => setIsPlaying(true))
+            .then(() => {
+              setIsPlaying(true);
+              setIsBuffering(false);
+            })
             .catch(() => {});
         });
     }
@@ -59,38 +67,84 @@ export default function Showreel() {
     setIsPlaying(false);
   };
 
+  // Video event listeners (empty deps so listeners are never torn down mid-playback)
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const onPlay = () => setIsPlaying(true);
+    const onPlay = () => {
+      setIsPlaying(true);
+      setIsBuffering(false);
+    };
     const onPause = () => setIsPlaying(false);
+    const onWaiting = () => setIsBuffering(true);
+    const onPlaying = () => {
+      setIsPlaying(true);
+      setIsBuffering(false);
+    };
+    const onCanPlay = () => setIsBuffering(false);
 
     const onTimeUpdate = () => {
       setCurrentTime(video.currentTime);
-      setProgress((video.currentTime / (video.duration || duration)) * 100 || 0);
+      const dur = video.duration || durationRef.current || 55.5;
+      setProgress((video.currentTime / dur) * 100 || 0);
     };
 
     const onLoadedMetadata = () => {
       if (video.duration && !isNaN(video.duration)) {
         setDuration(video.duration);
+        durationRef.current = video.duration;
       }
     };
 
     video.addEventListener('play', onPlay);
     video.addEventListener('pause', onPause);
+    video.addEventListener('waiting', onWaiting);
+    video.addEventListener('playing', onPlaying);
+    video.addEventListener('canplay', onCanPlay);
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('loadedmetadata', onLoadedMetadata);
 
     return () => {
       video.removeEventListener('play', onPlay);
       video.removeEventListener('pause', onPause);
+      video.removeEventListener('waiting', onWaiting);
+      video.removeEventListener('playing', onPlaying);
+      video.removeEventListener('canplay', onCanPlay);
       video.removeEventListener('timeupdate', onTimeUpdate);
       video.removeEventListener('loadedmetadata', onLoadedMetadata);
     };
-  }, [duration]);
+  }, []);
 
-  // GSAP Choreographed Section Entrance & Scroll Interactions + Autoplay
+  // IntersectionObserver: smoothly triggers autoplay when video enters view,
+  // and pauses ONLY when the video container completely leaves the viewport.
+  // Never pauses prematurely or jiggles while scrolling inside the section.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
+          attemptPlay();
+        } else if (!entry.isIntersecting || entry.intersectionRatio < 0.08) {
+          pauseVideo();
+          userManuallyPausedRef.current = false;
+        }
+      },
+      {
+        threshold: [0.08, 0.25],
+      }
+    );
+
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // GSAP Choreographed Section Entrance & Scroll Visuals
   useEffect(() => {
     if (!sectionRef.current) return;
 
@@ -145,27 +199,6 @@ export default function Showreel() {
         },
         y: -30,
         ease: 'none',
-      });
-
-      // Directly play video when user arrives on Showreel section
-      ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: 'top 65%',
-        end: 'bottom 20%',
-        onEnter: () => {
-          attemptPlay();
-        },
-        onEnterBack: () => {
-          attemptPlay();
-        },
-        onLeave: () => {
-          pauseVideo();
-          userManuallyPausedRef.current = false; // Reset so next visit autoplays
-        },
-        onLeaveBack: () => {
-          pauseVideo();
-          userManuallyPausedRef.current = false; // Reset so next visit autoplays
-        },
       });
     }, sectionRef);
 
@@ -299,6 +332,13 @@ export default function Showreel() {
                 <Play className="w-6 h-6 sm:w-7 sm:h-7 text-[#F0F0ED] fill-[#F0F0ED] translate-x-0.5" />
               </div>
             </div>
+
+            {/* Buffering Indicator Spinner */}
+            {isBuffering && isPlaying && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                <div className="w-12 h-12 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+              </div>
+            )}
 
             {/* Bottom Integrated Video Controls Bar (Matches Reference 04) */}
             <div

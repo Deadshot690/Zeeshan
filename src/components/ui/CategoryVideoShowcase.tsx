@@ -85,15 +85,15 @@ export default function CategoryVideoShowcase({ items, categoryTitle }: Category
         <div className={`relative w-full rounded-xl border border-white/[0.12] bg-[#070707] overflow-hidden shadow-[0_24px_70px_rgba(0,0,0,0.9)] flex items-center justify-center ${
           activeItem.isVertical ? 'min-h-[500px] sm:min-h-[640px] md:min-h-[720px] max-h-[82vh] py-6 bg-black/60 backdrop-blur-md' : 'aspect-video'
         }`}>
-          {/* Subtle Ambient Blurred Video Glow in Background */}
-          {activeItem.isVertical && (
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20 filter blur-3xl scale-125">
-              <video
-                src={activeItem.videoSrc}
-                muted
-                loop
-                playsInline
-                className="w-full h-full object-cover"
+          {/* Subtle Ambient Glow in Background from Poster Image (Zero Video Decoding Overhead) */}
+          {activeItem.isVertical && activeItem.thumbnailSrc && (
+            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-25 filter blur-3xl scale-125">
+              <Image
+                src={activeItem.thumbnailSrc}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 800px"
               />
             </div>
           )}
@@ -111,6 +111,7 @@ export default function CategoryVideoShowcase({ items, categoryTitle }: Category
             poster={activeItem.thumbnailSrc}
             controls
             playsInline
+            preload="metadata"
             onPlay={() => setIsPlayingTheater(true)}
             onPause={() => setIsPlayingTheater(false)}
             className={`relative z-10 transition-all ${
