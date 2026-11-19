@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ArrowUpRight } from 'lucide-react';
 import { ProjectRecord } from '@/types';
 import { soundManager } from '@/lib/sound';
+import { usePageTransition } from '@/components/providers/PageTransitionProvider';
 
 interface ProjectCardProps {
   project: ProjectRecord;
@@ -15,6 +16,7 @@ interface ProjectCardProps {
 export default function ProjectCard({ project, priority = false }: ProjectCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const { navigateTo } = usePageTransition();
 
   const handleMouseEnter = () => {
     setIsHovered(true);
@@ -32,9 +34,15 @@ export default function ProjectCard({ project, priority = false }: ProjectCardPr
     }
   };
 
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    navigateTo(`/work/${project.slug}`);
+  };
+
   return (
     <Link
       href={`/work/${project.slug}`}
+      onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className="group block relative w-full select-none"

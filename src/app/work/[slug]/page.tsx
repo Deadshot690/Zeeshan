@@ -9,6 +9,7 @@ import MagneticButton from '@/components/motion/MagneticButton';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import CategoryVideoShowcase from '@/components/ui/CategoryVideoShowcase';
+import TransitionLink from '@/components/ui/TransitionLink';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -37,13 +38,13 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       <main className="w-full pt-32 pb-24 px-6 md:px-12 max-w-7xl mx-auto flex-grow">
         {/* Navigation Back Link */}
         <div className="mb-10">
-          <Link
+          <TransitionLink
             href="/#selected-work"
-            className="inline-flex items-center gap-2 font-mono-tech text-xs tracking-[0.2em] uppercase text-[#A1A1A1] hover:text-[#F0F0ED] transition-colors py-2 group"
+            className="inline-flex items-center gap-2 font-mono-tech text-xs tracking-[0.2em] uppercase text-[#A1A1A1] hover:text-[#F0F0ED] transition-colors py-2 group cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span>RETURN TO SELECTED WORK</span>
-          </Link>
+          </TransitionLink>
         </div>
 
         {/* Project Header Info */}
@@ -173,9 +174,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
         {/* Adjacent Project Navigation */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-8 border-t border-white/[0.1]">
-          <Link
+          <TransitionLink
             href={`/work/${prev.slug}`}
-            className="group p-6 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/30 transition-all flex flex-col justify-between"
+            className="group p-6 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/30 transition-all flex flex-col justify-between cursor-pointer"
           >
             <div className="flex items-center gap-2 font-mono-tech text-xs text-[#777777] mb-3">
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
@@ -184,11 +185,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             <h4 className="font-sans-body font-bold text-lg uppercase text-[#F0F0ED] group-hover:text-white">
               {prev.title}
             </h4>
-          </Link>
+          </TransitionLink>
 
-          <Link
+          <TransitionLink
             href={`/work/${next.slug}`}
-            className="group p-6 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/30 transition-all flex flex-col justify-between text-right"
+            className="group p-6 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/30 transition-all flex flex-col justify-between text-right cursor-pointer"
           >
             <div className="flex items-center justify-end gap-2 font-mono-tech text-xs text-[#777777] mb-3">
               <span>NEXT CATEGORY // {next.identifier}</span>
@@ -197,7 +198,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             <h4 className="font-sans-body font-bold text-lg uppercase text-[#F0F0ED] group-hover:text-white">
               {next.title}
             </h4>
-          </Link>
+          </TransitionLink>
         </div>
       </main>
 

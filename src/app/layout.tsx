@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { DM_Sans, Instrument_Serif, DM_Mono } from 'next/font/google';
 import './globals.css';
 import SmoothScrollProvider from '@/components/providers/SmoothScrollProvider';
+import PageTransitionProvider from '@/components/providers/PageTransitionProvider';
 import CustomCursor from '@/components/motion/CustomCursor';
 import { siteConfig } from '@/data/site';
 
@@ -87,8 +88,21 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html:
-              "try{if(sessionStorage.getItem('frame_has_loaded')==='true'){document.documentElement.classList.add('has-loaded');}}catch(e){}",
+            __html: `
+              try {
+                var isReload = false;
+                var nav = performance.getEntriesByType('navigation');
+                if (nav && nav.length > 0) {
+                  isReload = nav[0].type === 'reload';
+                } else if (window.performance && window.performance.navigation) {
+                  isReload = window.performance.navigation.type === 1;
+                }
+                // Only suppress preloader if it is NOT a reload and already loaded in this session
+                if (!isReload && sessionStorage.getItem('frame_has_loaded') === 'true') {
+                  document.documentElement.classList.add('has-loaded');
+                }
+              } catch(e) {}
+            `,
           }}
         />
       </head>
@@ -101,10 +115,12 @@ export default function RootLayout({
 
         {/* Inertial Smooth Scrolling System */}
         <SmoothScrollProvider>
-          {/* Custom Interactive Follower Cursor (Fine pointer only) */}
-          <CustomCursor />
+          <PageTransitionProvider>
+            {/* Custom Interactive Follower Cursor (Fine pointer only) */}
+            <CustomCursor />
 
-          {children}
+            {children}
+          </PageTransitionProvider>
         </SmoothScrollProvider>
       </body>
     </html>

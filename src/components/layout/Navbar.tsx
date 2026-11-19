@@ -8,11 +8,13 @@ import { siteConfig } from '@/data/site';
 import SoundToggle from '@/components/ui/SoundToggle';
 import MagneticButton from '@/components/motion/MagneticButton';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
+import { usePageTransition } from '@/components/providers/PageTransitionProvider';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { scrollTo } = useSmoothScroll();
+  const { navigateTo } = usePageTransition();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,19 +25,9 @@ export default function Navbar() {
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, target: string) => {
-    const hash = target.includes('#') ? `#${target.split('#')[1]}` : target;
-    if (typeof window !== 'undefined' && window.location.pathname === '/') {
-      if (hash.startsWith('#')) {
-        e.preventDefault();
-        scrollTo(hash);
-        setMobileMenuOpen(false);
-      }
-    } else {
-      // If on subpage (e.g. /work/[slug]), navigate back to home section
-      e.preventDefault();
-      window.location.href = `/${hash}`;
-      setMobileMenuOpen(false);
-    }
+    e.preventDefault();
+    setMobileMenuOpen(false);
+    navigateTo(target);
   };
 
   const navLinks = [
@@ -57,7 +49,14 @@ export default function Navbar() {
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
           {/* Brand Monogram */}
-          <Link href="/" className="group flex items-center gap-3">
+          <Link
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              navigateTo('/');
+            }}
+            className="group flex items-center gap-3"
+          >
             <div className="relative w-8 h-8 rounded border border-white/20 flex items-center justify-center bg-white/[0.03] group-hover:border-white/60 transition-colors">
               <span className="font-mono-tech text-xs font-bold text-[#F0F0ED]">Z</span>
               <div className="corner-bracket corner-tl !w-1.5 !h-1.5" />

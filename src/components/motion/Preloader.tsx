@@ -14,6 +14,18 @@ export default function Preloader({ onComplete }: PreloaderProps) {
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
+        let isReload = false;
+        const nav = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+        if (nav && nav.length > 0 && nav[0]) {
+          isReload = nav[0].type === 'reload';
+        } else if ((window.performance as any)?.navigation) {
+          isReload = (window.performance as any).navigation.type === 1;
+        }
+
+        if (isReload) {
+          return true; // Always show preloader on page refresh
+        }
+
         return sessionStorage.getItem('frame_has_loaded') !== 'true';
       } catch {
         return true;
@@ -23,10 +35,21 @@ export default function Preloader({ onComplete }: PreloaderProps) {
   });
 
   useEffect(() => {
-    // Check if user has already seen preloader in this active session
+    // Check if the current page load is a browser refresh (F5 / reload)
+    let isReload = false;
+    try {
+      const nav = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+      if (nav && nav.length > 0 && nav[0]) {
+        isReload = nav[0].type === 'reload';
+      } else if ((window.performance as any)?.navigation) {
+        isReload = (window.performance as any).navigation.type === 1;
+      }
+    } catch {}
+
+    // Check if user has already seen preloader in this active session (and not refreshing)
     let hasSeen = false;
     try {
-      hasSeen = sessionStorage.getItem('frame_has_loaded') === 'true';
+      hasSeen = !isReload && sessionStorage.getItem('frame_has_loaded') === 'true';
     } catch {
       hasSeen = false;
     }
@@ -40,7 +63,13 @@ export default function Preloader({ onComplete }: PreloaderProps) {
       return;
     }
 
-    // Lock scroll during first-time preloader presentation
+    // Otherwise (First entrance OR page refresh): Show preloader!
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.remove('has-loaded');
+    }
+    setIsVisible(true);
+
+    // Lock scroll during preloader presentation
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 

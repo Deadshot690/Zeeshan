@@ -6,10 +6,12 @@ import { ArrowUp, ArrowUpRight, Copy, Check, Radio, Volume2, Film, Sliders, Spar
 import { siteConfig } from '@/data/site';
 import MagneticButton from '@/components/motion/MagneticButton';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
+import { usePageTransition } from '@/components/providers/PageTransitionProvider';
 import { soundManager } from '@/lib/sound';
 
 export default function Footer() {
   const { scrollTo } = useSmoothScroll();
+  const { navigateTo } = usePageTransition();
   const [copied, setCopied] = useState(false);
   const [smpteTimecode, setSmpteTimecode] = useState('00:00:00:00');
   const [localTime, setLocalTime] = useState('');
@@ -46,15 +48,8 @@ export default function Footer() {
   };
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, target: string) => {
-    if (target.startsWith('#')) {
-      e.preventDefault();
-      soundManager.playClick();
-      if (typeof window !== 'undefined' && window.location.pathname === '/') {
-        scrollTo(target);
-      } else {
-        window.location.href = `/${target}`;
-      }
-    }
+    e.preventDefault();
+    navigateTo(target);
   };
 
   const marqueeItems = useMemo(
