@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Preloader from '@/components/motion/Preloader';
@@ -17,14 +17,11 @@ import Footer from '@/components/layout/Footer';
 gsap.registerPlugin(ScrollTrigger);
 
 export default function HomePage() {
-  const [preloaderDone, setPreloaderDone] = useState(false);
-
-  const handlePreloaderComplete = () => {
-    setPreloaderDone(true);
+  const handlePreloaderComplete = useCallback(() => {
     setTimeout(() => {
       ScrollTrigger.refresh();
     }, 150);
-  };
+  }, []);
 
   return (
     <>

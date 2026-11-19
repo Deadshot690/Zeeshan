@@ -11,9 +11,20 @@ interface PreloaderProps {
 
 export default function Preloader({ onComplete }: PreloaderProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const onCompleteRef = useRef(onComplete);
+  const hasCompletedRef = useRef(false);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
+        if ((window as any).__FRAME_PRELOADER_COMPLETED__) {
+          return false;
+        }
+
         let isReload = false;
         const nav = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
         if (nav && nav.length > 0 && nav[0]) {
@@ -35,6 +46,12 @@ export default function Preloader({ onComplete }: PreloaderProps) {
   });
 
   useEffect(() => {
+    // If this document lifecycle has already completed the preloader, never run again
+    if (typeof window !== 'undefined' && (window as any).__FRAME_PRELOADER_COMPLETED__) {
+      setIsVisible(false);
+      return;
+    }
+
     // Check if the current page load is a browser refresh (F5 / reload)
     let isReload = false;
     try {
@@ -58,8 +75,12 @@ export default function Preloader({ onComplete }: PreloaderProps) {
       if (typeof document !== 'undefined') {
         document.documentElement.classList.add('has-loaded');
       }
+      hasCompletedRef.current = true;
+      if (typeof window !== 'undefined') {
+        (window as any).__FRAME_PRELOADER_COMPLETED__ = true;
+      }
       setIsVisible(false);
-      onComplete?.();
+      onCompleteRef.current?.();
       return;
     }
 
@@ -249,13 +270,17 @@ export default function Preloader({ onComplete }: PreloaderProps) {
           duration: 0.75,
           ease: 'power3.inOut',
           onComplete: () => {
+            hasCompletedRef.current = true;
+            if (typeof window !== 'undefined') {
+              (window as any).__FRAME_PRELOADER_COMPLETED__ = true;
+            }
             try {
               sessionStorage.setItem('frame_has_loaded', 'true');
               document.documentElement.classList.add('has-loaded');
             } catch {}
             document.body.style.overflow = originalOverflow;
             setIsVisible(false);
-            onComplete?.();
+            onCompleteRef.current?.();
           },
         },
         '-=0.1'
@@ -263,10 +288,13 @@ export default function Preloader({ onComplete }: PreloaderProps) {
     }, overlayRef);
 
     return () => {
-      ctx.revert();
+      // If the preloader has already completed its exit, DO NOT revert GSAP styles
+      if (!hasCompletedRef.current && !(window as any)?.__FRAME_PRELOADER_COMPLETED__) {
+        ctx.revert();
+      }
       document.body.style.overflow = originalOverflow;
     };
-  }, [onComplete]);
+  }, []);
 
   if (!isVisible) return null;
 
