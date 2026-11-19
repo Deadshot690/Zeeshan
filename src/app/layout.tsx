@@ -91,13 +91,14 @@ export default function RootLayout({
             __html: `
               try {
                 var isReload = false;
-                var nav = performance.getEntriesByType('navigation');
-                if (nav && nav.length > 0) {
+                var nav = performance.getEntriesByType && performance.getEntriesByType('navigation');
+                if (nav && nav.length > 0 && nav[0] && nav[0].type) {
                   isReload = nav[0].type === 'reload';
                 } else if (window.performance && window.performance.navigation) {
                   isReload = window.performance.navigation.type === 1;
                 }
-                // Only suppress preloader if it is NOT a reload and already loaded in this session
+
+                // If NOT a reload and already visited in this session, instantly suppress preloader
                 if (!isReload && sessionStorage.getItem('frame_has_loaded') === 'true') {
                   document.documentElement.classList.add('has-loaded');
                 }

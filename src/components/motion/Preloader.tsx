@@ -9,6 +9,20 @@ interface PreloaderProps {
   onComplete?: () => void;
 }
 
+function checkIsReload(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const nav = performance.getEntriesByType && (performance.getEntriesByType('navigation') as PerformanceNavigationTiming[]);
+    if (nav && nav.length > 0 && nav[0] && nav[0].type) {
+      return nav[0].type === 'reload';
+    }
+    if ((window.performance as any)?.navigation) {
+      return (window.performance as any).navigation.type === 1;
+    }
+  } catch {}
+  return false;
+}
+
 export default function Preloader({ onComplete }: PreloaderProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const onCompleteRef = useRef(onComplete);
@@ -25,14 +39,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
           return false;
         }
 
-        let isReload = false;
-        const nav = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
-        if (nav && nav.length > 0 && nav[0]) {
-          isReload = nav[0].type === 'reload';
-        } else if ((window.performance as any)?.navigation) {
-          isReload = (window.performance as any).navigation.type === 1;
-        }
-
+        const isReload = checkIsReload();
         if (isReload) {
           return true; // Always show preloader on page refresh
         }
@@ -52,18 +59,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
       return;
     }
 
-    // Check if the current page load is a browser refresh (F5 / reload)
-    let isReload = false;
-    try {
-      const nav = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
-      if (nav && nav.length > 0 && nav[0]) {
-        isReload = nav[0].type === 'reload';
-      } else if ((window.performance as any)?.navigation) {
-        isReload = (window.performance as any).navigation.type === 1;
-      }
-    } catch {}
-
-    // Check if user has already seen preloader in this active session (and not refreshing)
+    const isReload = checkIsReload();
     let hasSeen = false;
     try {
       hasSeen = !isReload && sessionStorage.getItem('frame_has_loaded') === 'true';
@@ -84,7 +80,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
       return;
     }
 
-    // Otherwise (First entrance OR page refresh): Show preloader!
+    // Otherwise (First entrance OR page refresh): Show preloader
     if (typeof document !== 'undefined') {
       document.documentElement.classList.remove('has-loaded');
     }
@@ -96,16 +92,24 @@ export default function Preloader({ onComplete }: PreloaderProps) {
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    const dismissPreloader = () => {
+      if (hasCompletedRef.current) return;
+      hasCompletedRef.current = true;
+      if (typeof window !== 'undefined') {
+        (window as any).__FRAME_PRELOADER_COMPLETED__ = true;
+      }
+      try {
+        sessionStorage.setItem('frame_has_loaded', 'true');
+        document.documentElement.classList.add('has-loaded');
+      } catch {}
+      document.body.style.overflow = originalOverflow;
+      setIsVisible(false);
+      onCompleteRef.current?.();
+    };
+
     // Quick exit for reduced motion
     if (prefersReducedMotion) {
-      const exitTimer = setTimeout(() => {
-        try {
-          sessionStorage.setItem('frame_has_loaded', 'true');
-        } catch {}
-        setIsVisible(false);
-        document.body.style.overflow = originalOverflow;
-        onComplete?.();
-      }, 250);
+      const exitTimer = setTimeout(dismissPreloader, 200);
       return () => {
         clearTimeout(exitTimer);
         document.body.style.overflow = originalOverflow;
@@ -114,17 +118,19 @@ export default function Preloader({ onComplete }: PreloaderProps) {
 
     if (!overlayRef.current) return;
 
-    const progressDuration = 1.5;
+    // Failsafe timer: guaranteed dismiss within 2.1s so preloader NEVER stays frozen
+    const failsafeTimer = setTimeout(dismissPreloader, 2100);
+
+    const progressDuration = 1.05;
 
     // Single Coordinated Master GSAP Timeline with Scoped Selectors
-    const ctx = gsap.context((self) => {
-      // 00. Initial Setup via Scoped Class Selectors (guaranteed no null refs)
+    const ctx = gsap.context(() => {
       gsap.set(overlayRef.current, { opacity: 1, yPercent: 0 });
       gsap.set('.preloader-chrome', { opacity: 0, scale: 1.04, x: 20 });
-      gsap.set('.preloader-bracket', { opacity: 0, scale: 0.9 });
-      gsap.set('.preloader-label', { opacity: 0, y: 10 });
-      gsap.set('.preloader-brand', { opacity: 0, y: 18 });
-      gsap.set('.preloader-progress-row', { opacity: 0, y: 8 });
+      gsap.set('.preloader-bracket', { opacity: 0, scale: 0.92 });
+      gsap.set('.preloader-label', { opacity: 0, y: 8 });
+      gsap.set('.preloader-brand', { opacity: 0, y: 14 });
+      gsap.set('.preloader-progress-row', { opacity: 0, y: 6 });
 
       const progressBarFill = overlayRef.current?.querySelector('.preloader-progress-fill') as HTMLDivElement | null;
       const progressNum = overlayRef.current?.querySelector('.preloader-progress-num') as HTMLSpanElement | null;
@@ -133,63 +139,65 @@ export default function Preloader({ onComplete }: PreloaderProps) {
         defaults: { ease: 'power2.out' },
       });
 
-      // Phase 01: Ambient Chrome Sculpture & Corner Framing Reveal (0.0s - 0.6s)
-      masterTl.to('.preloader-chrome', {
-        opacity: 0.95,
-        scale: 1,
-        x: 0,
-        duration: 0.75,
-        ease: 'power2.out',
-      });
+      // Phase 01: Ambient Chrome Sculpture & Corner Framing Reveal (0.0s - 0.4s)
+      masterTl.to(
+        '.preloader-chrome',
+        {
+          opacity: 0.95,
+          scale: 1,
+          x: 0,
+          duration: 0.45,
+          ease: 'power2.out',
+        },
+        0
+      );
 
       masterTl.to(
         '.preloader-bracket',
         {
           opacity: 0.65,
           scale: 1,
-          duration: 0.5,
-          stagger: 0.04,
+          duration: 0.35,
+          stagger: 0.03,
         },
-        '-=0.55'
+        0.05
       );
 
-      // Phase 02: "LOADING EXPERIENCE" Label Reveal (0.2s - 0.6s)
+      // Phase 02: Label & Brand Reveal (0.05s - 0.4s)
       masterTl.to(
         '.preloader-label',
         {
           opacity: 1,
           y: 0,
-          duration: 0.45,
+          duration: 0.3,
           ease: 'power2.out',
         },
-        '-=0.35'
+        0.08
       );
 
-      // Phase 03: Primary Brand Typography Reveal "ZEESHAN" (0.35s - 1.0s)
       masterTl.to(
         '.preloader-brand',
         {
           opacity: 1,
           y: 0,
-          duration: 0.75,
+          duration: 0.4,
           ease: 'power3.out',
         },
-        '-=0.25'
+        0.12
       );
 
-      // Reveal Progress Bar Row (0.5s - 0.85s)
       masterTl.to(
         '.preloader-progress-row',
         {
           opacity: 1,
           y: 0,
-          duration: 0.4,
+          duration: 0.3,
           ease: 'power2.out',
         },
-        '-=0.45'
+        0.15
       );
 
-      // Phase 04: Synchronized Progress Animation (Starts at 0.5s and glides to 100%)
+      // Phase 03: Synchronized Progress Animation (Starts immediately at 0.1s and counts to 100%)
       const progressState = { value: 0 };
       masterTl.to(
         progressState,
@@ -207,88 +215,63 @@ export default function Preloader({ onComplete }: PreloaderProps) {
             }
           },
         },
-        '-=0.3'
+        0.1
       );
 
-      // Phase 05: Cinematic Exit Sequence (follows 100% completion in the same timeline)
-      // Brief aesthetic pause
-      masterTl.to({}, { duration: 0.2 });
+      // Phase 04: Brief breath at 100% completion
+      masterTl.to({}, { duration: 0.1 });
 
-      // Fade out loading text & progress row (safely using selector array)
+      // Phase 05: Cinematic Exit Sequence
       masterTl.to(
         ['.preloader-label', '.preloader-progress-row'],
         {
           opacity: 0,
           y: -6,
-          duration: 0.3,
-          stagger: 0.03,
+          duration: 0.22,
+          stagger: 0.02,
           ease: 'power2.in',
         }
       );
 
-      // Subtle upward glide of brand name
       masterTl.to(
         '.preloader-brand',
         {
           opacity: 0,
-          y: -14,
-          duration: 0.4,
+          y: -12,
+          duration: 0.28,
           ease: 'power3.in',
         },
-        '-=0.15'
+        '-=0.14'
       );
 
-      // Fade corner brackets
       masterTl.to(
-        '.preloader-bracket',
+        ['.preloader-bracket', '.preloader-chrome'],
         {
           opacity: 0,
-          scale: 0.96,
-          duration: 0.3,
+          duration: 0.22,
           ease: 'power2.in',
         },
-        '-=0.25'
+        '-=0.18'
       );
 
-      // Fade chrome reflection as curtain lifts
-      masterTl.to(
-        '.preloader-chrome',
-        {
-          opacity: 0,
-          x: 15,
-          duration: 0.4,
-          ease: 'power2.in',
-        },
-        '-=0.3'
-      );
-
-      // Vertical shutter reveal lifting upward like a camera shutter
+      // Vertical shutter reveal lifting upward
       masterTl.to(
         overlayRef.current,
         {
           yPercent: -100,
-          duration: 0.75,
+          duration: 0.5,
           ease: 'power3.inOut',
           onComplete: () => {
-            hasCompletedRef.current = true;
-            if (typeof window !== 'undefined') {
-              (window as any).__FRAME_PRELOADER_COMPLETED__ = true;
-            }
-            try {
-              sessionStorage.setItem('frame_has_loaded', 'true');
-              document.documentElement.classList.add('has-loaded');
-            } catch {}
-            document.body.style.overflow = originalOverflow;
-            setIsVisible(false);
-            onCompleteRef.current?.();
+            clearTimeout(failsafeTimer);
+            dismissPreloader();
           },
         },
-        '-=0.1'
+        '-=0.08'
       );
     }, overlayRef);
 
     return () => {
-      // If the preloader has already completed its exit, DO NOT revert GSAP styles
+      clearTimeout(failsafeTimer);
       if (!hasCompletedRef.current && !(window as any)?.__FRAME_PRELOADER_COMPLETED__) {
         ctx.revert();
       }
