@@ -44,7 +44,14 @@ export default function CategoryVideoShowcase({ items, categoryTitle }: Category
   // Lightbox modal item (for full cinema screening overlay)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Transform video items into luxury Polaroid slides
+  // Check if category videos are primarily widescreen horizontal (16:9) or vertical short-form (9:16)
+  const isHorizontalCategory = useMemo(() => {
+    const horizontalCount = items.filter((i) => !i.isVertical).length;
+    const verticalCount = items.filter((i) => i.isVertical).length;
+    return horizontalCount >= verticalCount;
+  }, [items]);
+
+  // Transform video items into luxury device slides
   const slides: Slide[] = useMemo(() => {
     return items.map((item) => ({
       image: item.thumbnailSrc,
@@ -122,7 +129,7 @@ export default function CategoryVideoShowcase({ items, categoryTitle }: Category
             }`}
           >
             <Sparkles className="w-3 h-3" />
-            <span>POLAROID REEL STRIP</span>
+            <span>TABLET SHOWCASE</span>
           </button>
 
           <button
@@ -148,12 +155,13 @@ export default function CategoryVideoShowcase({ items, categoryTitle }: Category
         <div className="flex flex-col gap-6">
           <PolaroidLineCarousel
             slides={slides}
-            height="620px"
-            cardWidth={240}
-            aspectRatio="9/16"
-            sag={42}
+            height={isHorizontalCategory ? '640px' : '680px'}
+            cardWidth={isHorizontalCategory ? 460 : 230}
+            aspectRatio={isHorizontalCategory ? '16/9' : '9/16'}
+            sag={isHorizontalCategory ? 26 : 34}
             swing={1}
-            autoplay={4500}
+            autoplay={5000}
+            deviceType={isHorizontalCategory ? 'tablet' : 'phone'}
             onSelectVideo={(slide, idx) => {
               setActivePlayingId(null);
               setLightboxIndex(idx);
@@ -164,7 +172,7 @@ export default function CategoryVideoShowcase({ items, categoryTitle }: Category
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono-tech text-[#777777] px-2">
             <span className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span>DRAG THE STRING OR USE ARROWS • CLICK ANY SUSPENDED REEL TO SCREEN FULL VIDEO</span>
+              <span>DRAG THE CABLE OR USE ARROWS • CLICK ANY SUSPENDED DEVICE TO SCREEN FULL VIDEO</span>
             </span>
             <button
               type="button"
