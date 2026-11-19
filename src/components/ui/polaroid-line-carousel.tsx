@@ -144,14 +144,23 @@ function paintLandscape(seed: number, palette: LandPalette, w = 1600, h = 1000):
     const amp = h * (0.07 + k * 0.1);
     const ph = [r(), r(), r(), r()].map((v) => v * Math.PI * 2);
     const fr = [1.3 + r(), 3.1 + r() * 2, 7 + r() * 4, 17 + r() * 8];
+    const ph0 = ph[0] ?? 0;
+    const ph1 = ph[1] ?? 0;
+    const ph2 = ph[2] ?? 0;
+    const ph3 = ph[3] ?? 0;
+    const fr0 = fr[0] ?? 1;
+    const fr1 = fr[1] ?? 3;
+    const fr2 = fr[2] ?? 7;
+    const fr3 = fr[3] ?? 17;
+
     const ridge = (x: number) => {
       const nx = x / w;
       return (
         base +
-        Math.sin(nx * fr[0] + ph[0]) * amp +
-        Math.sin(nx * fr[1] + ph[1]) * (amp * 0.45) +
-        Math.sin(nx * fr[2] + ph[2]) * (amp * 0.18) +
-        Math.sin(nx * fr[3] + ph[3]) * (amp * 0.07)
+        Math.sin(nx * fr0 + ph0) * amp +
+        Math.sin(nx * fr1 + ph1) * (amp * 0.45) +
+        Math.sin(nx * fr2 + ph2) * (amp * 0.18) +
+        Math.sin(nx * fr3 + ph3) * (amp * 0.07)
       );
     };
     g.beginPath();
@@ -167,9 +176,9 @@ function paintLandscape(seed: number, palette: LandPalette, w = 1600, h = 1000):
   const d = grain.data;
   for (let i = 0; i < d.length; i += 4) {
     const v = (r() - 0.5) * 14;
-    d[i] += v;
-    d[i + 1] += v;
-    d[i + 2] += v;
+    d[i] = ((d[i] ?? 0) + v) as number;
+    d[i + 1] = ((d[i + 1] ?? 0) + v) as number;
+    d[i + 2] = ((d[i + 2] ?? 0) + v) as number;
   }
   g.putImageData(grain, 0, 0);
   return c.toDataURL('image/jpeg', 0.88);
@@ -178,7 +187,7 @@ function paintLandscape(seed: number, palette: LandPalette, w = 1600, h = 1000):
 function mixRgb(a: string, b: string, t: number): string {
   const A = hexRgb(a);
   const B = hexRgb(b);
-  return 'rgb(' + A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',') + ')';
+  return 'rgb(' + A.map((v, i) => Math.round(v + ((B[i] ?? v) - v) * t)).join(',') + ')';
 }
 
 const DEFAULT_SLIDES: Slide[] = [
@@ -681,6 +690,7 @@ export default function PolaroidLineCarousel({
     };
 
     const io = new IntersectionObserver(([e]) => {
+      if (!e) return;
       visible = e.isIntersecting;
       if (visible && !raf) {
         prev = performance.now();
