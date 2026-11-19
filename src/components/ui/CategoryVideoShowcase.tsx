@@ -16,9 +16,11 @@ import {
   Smartphone,
   Monitor,
   CheckCircle2,
+  LayoutGrid,
 } from 'lucide-react';
 import { ProjectMediaItem } from '@/types';
 import { soundManager } from '@/lib/sound';
+import { OrbitGallery } from '@/components/ui/3d-orbit-gallery';
 
 interface CategoryVideoShowcaseProps {
   items: ProjectMediaItem[];
@@ -33,6 +35,9 @@ function formatVideoTime(seconds: number): string {
 }
 
 export default function CategoryVideoShowcase({ items, categoryTitle }: CategoryVideoShowcaseProps) {
+  // View mode: 3D Orbit Galaxy vs Classic Card Grid
+  const [viewMode, setViewMode] = useState<'3d' | 'grid'>('3d');
+
   // Currently playing card ID (for inline in-card playback)
   const [activePlayingId, setActivePlayingId] = useState<string | null>(null);
 
@@ -75,8 +80,8 @@ export default function CategoryVideoShowcase({ items, categoryTitle }: Category
 
   return (
     <div className="w-full flex flex-col gap-10">
-      {/* 01. Catalog Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-white/[0.1] pb-6">
+      {/* 01. Catalog Header & View Mode Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-white/[0.1] pb-6">
         <div>
           <div className="flex items-center gap-2 font-mono-tech text-[10px] text-[#777777] uppercase tracking-[0.25em] mb-2">
             <Film className="w-3.5 h-3.5 text-[#F0F0ED]" />
@@ -88,41 +93,104 @@ export default function CategoryVideoShowcase({ items, categoryTitle }: Category
             ALL {categoryTitle.toUpperCase()} WORKS
           </h2>
         </div>
-        <p className="font-mono-tech text-xs text-[#A1A1A1] uppercase tracking-wider max-w-sm sm:text-right">
-          Click any card to play directly in place, or open in cinema screening mode.
-        </p>
+
+        {/* View Mode Toggle: 3D Orbit Sphere vs Classic Grid */}
+        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-white/[0.04] border border-white/10 self-start sm:self-end">
+          <button
+            type="button"
+            onClick={() => {
+              setViewMode('3d');
+              soundManager.playClick();
+            }}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded font-mono-tech text-[11px] tracking-wider uppercase transition-all cursor-pointer ${
+              viewMode === '3d'
+                ? 'bg-[#F0F0ED] text-[#080808] font-bold shadow-md'
+                : 'text-[#A1A1A1] hover:text-[#F0F0ED]'
+            }`}
+          >
+            <Sparkles className="w-3 h-3" />
+            <span>3D ORBIT VIEW</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setViewMode('grid');
+              soundManager.playClick();
+            }}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded font-mono-tech text-[11px] tracking-wider uppercase transition-all cursor-pointer ${
+              viewMode === 'grid'
+                ? 'bg-[#F0F0ED] text-[#080808] font-bold shadow-md'
+                : 'text-[#A1A1A1] hover:text-[#F0F0ED]'
+            }`}
+          >
+            <LayoutGrid className="w-3 h-3" />
+            <span>GRID ARCHIVE</span>
+          </button>
+        </div>
       </div>
 
-      {/* 02. Video Cards Grid with Direct In-Card Playback */}
-      <div
-        className={`grid gap-8 ${
-          items.some((i) => i.isVertical)
-            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-            : 'grid-cols-1 md:grid-cols-2'
-        }`}
-      >
-        {items.map((item, idx) => (
-          <InlineVideoCard
-            key={item.id}
-            item={item}
-            index={idx}
-            isPlaying={activePlayingId === item.id}
-            onTogglePlay={() => {
-              if (activePlayingId === item.id) {
-                setActivePlayingId(null);
-              } else {
-                setActivePlayingId(item.id);
-                soundManager.playClick();
-              }
-            }}
-            onOpenCinema={() => {
-              setActivePlayingId(null); // Pause inline when expanding
+      {/* 02. Showcase Presentation */}
+      {viewMode === '3d' ? (
+        <div className="flex flex-col gap-6">
+          <OrbitGallery
+            items={items}
+            categoryTitle={categoryTitle}
+            onSelectVideo={(item, idx) => {
+              setActivePlayingId(null);
               setLightboxIndex(idx);
               soundManager.playClick();
             }}
           />
-        ))}
-      </div>
+          {/* Quick Guidance Strip */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono-tech text-[#777777] px-2">
+            <span className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span>SHOWING {items.length} 3D SPATIAL VIDEO NODES • CLICK ANY NODE TO SCREEN FULL VIDEO</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode('grid');
+                soundManager.playClick();
+              }}
+              className="text-[#A1A1A1] hover:text-white underline tracking-wider cursor-pointer transition-colors"
+            >
+              SWITCH TO CLASSIC MULTI-COLUMN GRID →
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div
+          className={`grid gap-8 ${
+            items.some((i) => i.isVertical)
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              : 'grid-cols-1 md:grid-cols-2'
+          }`}
+        >
+          {items.map((item, idx) => (
+            <InlineVideoCard
+              key={item.id}
+              item={item}
+              index={idx}
+              isPlaying={activePlayingId === item.id}
+              onTogglePlay={() => {
+                if (activePlayingId === item.id) {
+                  setActivePlayingId(null);
+                } else {
+                  setActivePlayingId(item.id);
+                  soundManager.playClick();
+                }
+              }}
+              onOpenCinema={() => {
+                setActivePlayingId(null); // Pause inline when expanding
+                setLightboxIndex(idx);
+                soundManager.playClick();
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* 03. Immersive Cinema Lightbox Modal */}
       {currentLightboxItem && lightboxIndex !== null && (
