@@ -59,27 +59,27 @@ export default function Philosophy() {
   useEffect(() => {
     if (!isTyping) return;
 
-    if (typedCount < totalChars) {
-      // Natural typing cadence: slight pause on spaces and punctuation
-      const currentChar = getCharAtIndex(typedCount);
-      const delay = currentChar === ' ' ? 70 : currentChar === '.' ? 140 : 38;
-
-      const timer = setTimeout(() => {
-        setTypedCount((prev) => {
-          const next = prev + 1;
-          if (next % 3 === 0) {
-            soundManager.playHover();
-          }
-          if (next >= totalChars) {
-            setIsTyping(false);
-            if (refresh) refresh();
-          }
-          return next;
-        });
-      }, delay);
-
-      return () => clearTimeout(timer);
+    if (typedCount >= totalChars) {
+      setIsTyping(false);
+      // Defer refresh via requestAnimationFrame to avoid triggering ScrollTrigger updates during render
+      const raf = requestAnimationFrame(() => {
+        if (refresh) refresh();
+      });
+      return () => cancelAnimationFrame(raf);
     }
+
+    // Natural typing cadence: slight pause on spaces and punctuation
+    const currentChar = getCharAtIndex(typedCount);
+    const delay = currentChar === ' ' ? 70 : currentChar === '.' ? 140 : 38;
+
+    const timer = setTimeout(() => {
+      setTypedCount((prev) => prev + 1);
+      if ((typedCount + 1) % 3 === 0) {
+        soundManager.playHover();
+      }
+    }, delay);
+
+    return () => clearTimeout(timer);
   }, [isTyping, typedCount, totalChars, refresh]);
 
   function getCharAtIndex(index: number): string {

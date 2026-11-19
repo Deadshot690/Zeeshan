@@ -242,17 +242,10 @@ export default function Preloader({ onComplete }: PreloaderProps) {
   if (!isVisible) return null;
 
   return (
-    <>
-      <script
-        dangerouslySetInnerHTML={{
-          __html:
-            "try{if(sessionStorage.getItem('frame_has_loaded')==='true'){document.documentElement.classList.add('has-loaded');}}catch(e){}",
-        }}
-      />
-      <div
-        ref={overlayRef}
-        suppressHydrationWarning
-        className="preloader-overlay fixed inset-0 z-[10000] bg-[#070707] flex flex-col items-center justify-center select-none overflow-hidden"
+    <div
+      ref={overlayRef}
+      suppressHydrationWarning
+      className="preloader-overlay fixed inset-0 z-[10000] bg-[#070707] flex flex-col items-center justify-center select-none overflow-hidden"
       role="status"
       aria-live="polite"
       aria-label="Loading portfolio experience"
@@ -316,6 +309,5 @@ export default function Preloader({ onComplete }: PreloaderProps) {
         </div>
       </div>
     </div>
-  </>
   );
 }

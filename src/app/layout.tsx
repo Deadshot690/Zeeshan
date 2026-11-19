@@ -81,9 +81,21 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${dmSans.variable} ${instrumentSerif.variable} ${dmMono.variable} scroll-smooth`}
     >
-      <body className="bg-[#080808] text-[#F0F0ED] antialiased selection:bg-[#F0F0ED] selection:text-[#080808]">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(sessionStorage.getItem('frame_has_loaded')==='true'){document.documentElement.classList.add('has-loaded');}}catch(e){}",
+          }}
+        />
+      </head>
+      <body
+        suppressHydrationWarning
+        className="bg-[#080808] text-[#F0F0ED] antialiased selection:bg-[#F0F0ED] selection:text-[#080808]"
+      >
         {/* Subtle Film Grain Noise Texture */}
         <div className="film-grain" aria-hidden="true" />
 

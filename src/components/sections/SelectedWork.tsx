@@ -15,8 +15,8 @@ export default function SelectedWork() {
   const sectionRef = useRef<HTMLElement>(null);
   const horizontalTrackRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const percentTextRef = useRef<HTMLSpanElement>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
-  const [scrollPercent, setScrollPercent] = useState<number>(0);
 
   const categories = [
     'ALL',
@@ -61,7 +61,13 @@ export default function SelectedWork() {
             invalidateOnRefresh: true,
             refreshPriority: 1,
             onUpdate: (self) => {
-              setScrollPercent(Math.round(self.progress * 100));
+              const percent = Math.round(self.progress * 100);
+              if (progressBarRef.current) {
+                progressBarRef.current.style.width = `${percent}%`;
+              }
+              if (percentTextRef.current) {
+                percentTextRef.current.textContent = `${percent}%`;
+              }
             },
           },
         });
@@ -113,10 +119,10 @@ export default function SelectedWork() {
                 <div
                   ref={progressBarRef}
                   className="h-full bg-[#F0F0ED] transition-all duration-150"
-                  style={{ width: `${scrollPercent}%` }}
+                  style={{ width: '0%' }}
                 />
               </div>
-              <span className="text-[#F0F0ED]">{scrollPercent}%</span>
+              <span ref={percentTextRef} className="text-[#F0F0ED]">0%</span>
             </div>
           </div>
         </div>
