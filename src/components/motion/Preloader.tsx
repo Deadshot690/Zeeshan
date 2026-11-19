@@ -11,21 +11,47 @@ interface PreloaderProps {
 
 export default function Preloader({ onComplete }: PreloaderProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return sessionStorage.getItem('frame_has_loaded') !== 'true';
+      } catch {
+        return true;
+      }
+    }
+    return true;
+  });
 
   useEffect(() => {
-    if (!overlayRef.current) return;
+    // Check if user has already seen preloader in this active session
+    let hasSeen = false;
+    try {
+      hasSeen = sessionStorage.getItem('frame_has_loaded') === 'true';
+    } catch {
+      hasSeen = false;
+    }
 
-    // Lock scroll during preloader presentation
+    if (hasSeen) {
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.add('has-loaded');
+      }
+      setIsVisible(false);
+      onComplete?.();
+      return;
+    }
+
+    // Lock scroll during first-time preloader presentation
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const hasSeen = sessionStorage.getItem('frame_has_loaded');
 
     // Quick exit for reduced motion
     if (prefersReducedMotion) {
       const exitTimer = setTimeout(() => {
+        try {
+          sessionStorage.setItem('frame_has_loaded', 'true');
+        } catch {}
         setIsVisible(false);
         document.body.style.overflow = originalOverflow;
         onComplete?.();
@@ -36,7 +62,9 @@ export default function Preloader({ onComplete }: PreloaderProps) {
       };
     }
 
-    const progressDuration = hasSeen ? 0.9 : 1.5;
+    if (!overlayRef.current) return;
+
+    const progressDuration = 1.5;
 
     // Single Coordinated Master GSAP Timeline with Scoped Selectors
     const ctx = gsap.context((self) => {
@@ -192,7 +220,10 @@ export default function Preloader({ onComplete }: PreloaderProps) {
           duration: 0.75,
           ease: 'power3.inOut',
           onComplete: () => {
-            sessionStorage.setItem('frame_has_loaded', 'true');
+            try {
+              sessionStorage.setItem('frame_has_loaded', 'true');
+              document.documentElement.classList.add('has-loaded');
+            } catch {}
             document.body.style.overflow = originalOverflow;
             setIsVisible(false);
             onComplete?.();
@@ -211,9 +242,17 @@ export default function Preloader({ onComplete }: PreloaderProps) {
   if (!isVisible) return null;
 
   return (
-    <div
-      ref={overlayRef}
-      className="preloader-overlay fixed inset-0 z-[10000] bg-[#070707] flex flex-col items-center justify-center select-none overflow-hidden"
+    <>
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            "try{if(sessionStorage.getItem('frame_has_loaded')==='true'){document.documentElement.classList.add('has-loaded');}}catch(e){}",
+        }}
+      />
+      <div
+        ref={overlayRef}
+        suppressHydrationWarning
+        className="preloader-overlay fixed inset-0 z-[10000] bg-[#070707] flex flex-col items-center justify-center select-none overflow-hidden"
       role="status"
       aria-live="polite"
       aria-label="Loading portfolio experience"
@@ -277,5 +316,6 @@ export default function Preloader({ onComplete }: PreloaderProps) {
         </div>
       </div>
     </div>
+  </>
   );
 }

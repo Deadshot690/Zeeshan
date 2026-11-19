@@ -159,6 +159,13 @@
   scrollbar-width: none;
 }
 
+/* Instantly suppress preloader if session is already active */
+html.has-loaded .preloader-overlay {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 /* Kinetic Infinite Marquee */
 @keyframes marqueeLeft {
   0% {

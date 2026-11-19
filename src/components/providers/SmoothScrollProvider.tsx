@@ -25,6 +25,14 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
   const [lenisInstance, setLenisInstance] = useState<Lenis | null>(null);
 
   useEffect(() => {
+    // If entering directly via a subpage (e.g. /work/[slug]), mark session active
+    // so returning to home never triggers the entrance preloader
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      try {
+        sessionStorage.setItem('frame_has_loaded', 'true');
+      } catch {}
+    }
+
     // Respect user's reduced motion preference
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
