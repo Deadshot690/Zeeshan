@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import {
   Play,
@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { ProjectMediaItem } from '@/types';
 import { soundManager } from '@/lib/sound';
-import { OrbitGallery } from '@/components/ui/3d-orbit-gallery';
+import PolaroidLineCarousel, { Slide } from '@/components/ui/polaroid-line-carousel';
 
 interface CategoryVideoShowcaseProps {
   items: ProjectMediaItem[];
@@ -35,14 +35,27 @@ function formatVideoTime(seconds: number): string {
 }
 
 export default function CategoryVideoShowcase({ items, categoryTitle }: CategoryVideoShowcaseProps) {
-  // View mode: 3D Orbit Galaxy vs Classic Card Grid
-  const [viewMode, setViewMode] = useState<'3d' | 'grid'>('3d');
+  // View mode: Polaroid Line Carousel vs Classic Card Grid
+  const [viewMode, setViewMode] = useState<'polaroid' | 'grid'>('polaroid');
 
   // Currently playing card ID (for inline in-card playback)
   const [activePlayingId, setActivePlayingId] = useState<string | null>(null);
 
   // Lightbox modal item (for full cinema screening overlay)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  // Transform video items into luxury Polaroid slides
+  const slides: Slide[] = useMemo(() => {
+    return items.map((item) => ({
+      image: item.thumbnailSrc,
+      title: item.title,
+      caption: `${item.tag || 'VIDEO EDIT'} • ${item.duration} • ${item.resolution || '4K UHD'}`,
+      tag: item.tag,
+      duration: item.duration,
+      resolution: item.resolution,
+      item,
+    }));
+  }, [items]);
 
   // Close lightbox
   const closeLightbox = useCallback(() => {
@@ -94,22 +107,22 @@ export default function CategoryVideoShowcase({ items, categoryTitle }: Category
           </h2>
         </div>
 
-        {/* View Mode Toggle: 3D Orbit Sphere vs Classic Grid */}
+        {/* View Mode Toggle: Polaroid Line Carousel vs Classic Grid */}
         <div className="flex items-center gap-1.5 p-1 rounded-lg bg-white/[0.04] border border-white/10 self-start sm:self-end">
           <button
             type="button"
             onClick={() => {
-              setViewMode('3d');
+              setViewMode('polaroid');
               soundManager.playClick();
             }}
             className={`flex items-center gap-2 px-3 py-1.5 rounded font-mono-tech text-[11px] tracking-wider uppercase transition-all cursor-pointer ${
-              viewMode === '3d'
+              viewMode === 'polaroid'
                 ? 'bg-[#F0F0ED] text-[#080808] font-bold shadow-md'
                 : 'text-[#A1A1A1] hover:text-[#F0F0ED]'
             }`}
           >
             <Sparkles className="w-3 h-3" />
-            <span>3D ORBIT VIEW</span>
+            <span>POLAROID REEL STRIP</span>
           </button>
 
           <button
@@ -131,12 +144,17 @@ export default function CategoryVideoShowcase({ items, categoryTitle }: Category
       </div>
 
       {/* 02. Showcase Presentation */}
-      {viewMode === '3d' ? (
+      {viewMode === 'polaroid' ? (
         <div className="flex flex-col gap-6">
-          <OrbitGallery
-            items={items}
-            categoryTitle={categoryTitle}
-            onSelectVideo={(item, idx) => {
+          <PolaroidLineCarousel
+            slides={slides}
+            height="620px"
+            cardWidth={240}
+            aspectRatio="9/16"
+            sag={42}
+            swing={1}
+            autoplay={4500}
+            onSelectVideo={(slide, idx) => {
               setActivePlayingId(null);
               setLightboxIndex(idx);
               soundManager.playClick();
@@ -146,7 +164,7 @@ export default function CategoryVideoShowcase({ items, categoryTitle }: Category
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono-tech text-[#777777] px-2">
             <span className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span>SHOWING {items.length} 3D SPATIAL VIDEO NODES • CLICK ANY NODE TO SCREEN FULL VIDEO</span>
+              <span>DRAG THE STRING OR USE ARROWS • CLICK ANY SUSPENDED REEL TO SCREEN FULL VIDEO</span>
             </span>
             <button
               type="button"
