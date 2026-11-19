@@ -20,10 +20,11 @@ export default function Showreel() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const userManuallyPausedRef = useRef(false);
+  const userManuallyMutedRef = useRef(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); // Default muted to ensure flawless instant browser autoplay
+  const [isMuted, setIsMuted] = useState(false); // Unmuted by default as requested
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(55.5);
@@ -38,6 +39,12 @@ export default function Showreel() {
     if (!video) return;
     if (!force && userManuallyPausedRef.current) return;
 
+    // Unmute by default unless user has explicitly pressed the mute button
+    if (!userManuallyMutedRef.current) {
+      video.muted = false;
+      setIsMuted(false);
+    }
+
     const playPromise = video.play();
     if (playPromise !== undefined) {
       playPromise
@@ -46,16 +53,32 @@ export default function Showreel() {
           setIsBuffering(false);
         })
         .catch(() => {
-          // If browser blocked unmuted autoplay, mute and resume automatically
-          video.muted = true;
-          setIsMuted(true);
-          video
-            .play()
-            .then(() => {
-              setIsPlaying(true);
-              setIsBuffering(false);
-            })
-            .catch(() => {});
+          // If browser policy blocked unmuted autoplay without prior user interaction,
+          // play visually and automatically unmute on the first user interaction
+          if (!userManuallyMutedRef.current) {
+            video.muted = true;
+            setIsMuted(true);
+            video
+              .play()
+              .then(() => {
+                setIsPlaying(true);
+                setIsBuffering(false);
+              })
+              .catch(() => {});
+
+            const unmuteOnInteraction = () => {
+              if (video && !userManuallyMutedRef.current) {
+                video.muted = false;
+                setIsMuted(false);
+              }
+              window.removeEventListener('click', unmuteOnInteraction);
+              window.removeEventListener('keydown', unmuteOnInteraction);
+              window.removeEventListener('touchstart', unmuteOnInteraction);
+            };
+            window.addEventListener('click', unmuteOnInteraction, { once: true });
+            window.addEventListener('keydown', unmuteOnInteraction, { once: true });
+            window.addEventListener('touchstart', unmuteOnInteraction, { once: true });
+          }
         });
     }
   };
@@ -215,6 +238,11 @@ export default function Showreel() {
       userManuallyPausedRef.current = true;
     } else {
       userManuallyPausedRef.current = false;
+      // Ensure audio plays unmuted on user play action unless manually muted
+      if (!userManuallyMutedRef.current) {
+        video.muted = false;
+        setIsMuted(false);
+      }
       video
         .play()
         .then(() => setIsPlaying(true))
@@ -226,8 +254,10 @@ export default function Showreel() {
     e.stopPropagation();
     const video = videoRef.current;
     if (!video) return;
-    video.muted = !isMuted;
-    setIsMuted(!isMuted);
+    const nextMuted = !isMuted;
+    video.muted = nextMuted;
+    setIsMuted(nextMuted);
+    userManuallyMutedRef.current = nextMuted;
   };
 
   const toggleFullscreen = (e: React.MouseEvent) => {
