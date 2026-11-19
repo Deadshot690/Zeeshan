@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Play, Pause, Maximize, Volume2, VolumeX } from 'lucide-react';
+import Image from 'next/image';
+import { Play, Pause, Maximize, Volume2, VolumeX, Settings, Share2 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { siteConfig } from '@/data/site';
@@ -338,27 +339,49 @@ export default function Showreel() {
             {/* Subtle Vignette & Contrast Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/15 pointer-events-none" />
 
-            {/* Faint Cinematic Camera Metadata Watermark */}
-            <div className="absolute top-4 left-5 right-5 flex items-center justify-between font-mono-tech text-[9px] text-[#A1A1A1]/70 tracking-widest uppercase pointer-events-none z-20">
-              <div className="flex items-center gap-2.5">
-                <span
-                  className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-red-500 animate-pulse' : 'bg-white/40'
-                    }`}
-                />
-                <span className="text-[#F0F0ED]/90 font-bold">REC ● [24.00 FPS]</span>
+            {/* YouTube Top Overlay: Channel Info & Quality Metadata */}
+            <div
+              className={`absolute top-0 inset-x-0 pt-3 pb-8 px-4 sm:px-5 bg-gradient-to-b from-black/85 via-black/40 to-transparent flex items-center justify-between z-20 transition-opacity duration-300 ${
+                isHovered || !isPlaying ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0 pr-3">
+                <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden border border-white/30 flex-shrink-0 bg-neutral-900 shadow">
+                  <Image
+                    src="/assets/branding/zeeshan.jpg"
+                    alt="Zeeshan"
+                    fill
+                    className="object-cover"
+                    sizes="32px"
+                  />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs sm:text-sm font-semibold text-white truncate drop-shadow leading-tight">
+                    ZEESHAN SHOWREEL 2026 — MASTER EDIT
+                  </span>
+                  <span className="text-[10px] text-white/70 truncate mt-0.5 font-sans">
+                    Zeeshan • Video Editor & VFX
+                  </span>
+                </div>
               </div>
-              <div className="hidden sm:flex items-center gap-4 text-[#777777]">
-                <span>SHUTTER 180°</span>
-                <span>4K MASTER</span>
+
+              <div className="flex items-center gap-2 text-white/90">
+                <div className="px-1.5 py-0.5 rounded border border-white/60 text-[9px] font-bold text-white tracking-wider select-none">
+                  CC
+                </div>
+                <div className="p-1 hover:text-white transition-transform hover:rotate-45" title="4K UHD Master (60fps)">
+                  <Settings className="w-4 h-4" />
+                </div>
               </div>
             </div>
 
-            {/* Center Circular Play Button (Animated out when playing) */}
+            {/* Center Circular YouTube Play Button (Animated out when playing) */}
             <div
-              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 pointer-events-none z-20 ${isPlaying ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
-                }`}
+              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 pointer-events-none z-20 ${
+                isPlaying ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
+              }`}
             >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/80 bg-black/40 backdrop-blur-md flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-[0_0_35px_rgba(0,0,0,0.8)]">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/80 bg-black/55 backdrop-blur-md flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-[0_0_35px_rgba(0,0,0,0.8)]">
                 <Play className="w-6 h-6 sm:w-7 sm:h-7 text-[#F0F0ED] fill-[#F0F0ED] translate-x-0.5" />
               </div>
             </div>
@@ -370,76 +393,103 @@ export default function Showreel() {
               </div>
             )}
 
-            {/* Bottom Integrated Video Controls Bar (Matches Reference 04) */}
+            {/* YouTube Bottom Controls Bar with Red Scrubber & Logo */}
             <div
-              className={`absolute bottom-0 inset-x-0 pt-8 pb-4 px-5 sm:px-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col gap-2.5 z-30 transition-opacity duration-300 ${isHovered || isPlaying ? 'opacity-100' : 'opacity-85'
-                }`}
+              onClick={(e) => e.stopPropagation()}
+              className={`absolute bottom-0 inset-x-0 pt-10 pb-3 px-4 sm:px-5 bg-gradient-to-t from-black/95 via-black/50 to-transparent flex flex-col gap-2 z-30 transition-opacity duration-300 ${
+                isHovered || !isPlaying ? 'opacity-100' : 'opacity-0'
+              }`}
             >
-              {/* Primary Controls Row: Play/Pause, Timecode, Scrubber, Volume & Fullscreen */}
-              <div className="flex items-center justify-between gap-4 font-mono-tech text-xs text-[#E0E0DC]">
-                {/* Left Controls: Play/Pause + Timecode (e.g. 0:00 / 2:48) */}
-                <div className="flex items-center gap-3">
+              {/* Signature YouTube Red Progress Scrubber Bar */}
+              <div
+                onClick={handleSeek}
+                className="group/scrub relative w-full h-[3px] hover:h-[5px] bg-white/25 cursor-pointer transition-all flex items-center py-1"
+              >
+                {/* Buffered Track */}
+                <div
+                  className="absolute left-0 top-1 bottom-1 bg-white/40 rounded-full"
+                  style={{ width: `${Math.min(100, progress + 25)}%` }}
+                />
+                {/* Played Track (YouTube Red #FF0000) */}
+                <div
+                  className="absolute left-0 top-1 bottom-1 bg-[#FF0000] rounded-full"
+                  style={{ width: `${progress}%` }}
+                />
+                {/* Red Playhead Thumb */}
+                <div
+                  className="absolute w-3 h-3 sm:w-3.5 sm:h-3.5 bg-[#FF0000] rounded-full -translate-x-1/2 shadow transition-transform scale-0 group-hover/scrub:scale-100"
+                  style={{ left: `${progress}%` }}
+                />
+              </div>
+
+              {/* Primary Controls Row: Play/Pause, Timecode, Volume, Fullscreen & YouTube Logo */}
+              <div className="flex items-center justify-between text-white font-sans text-xs">
+                {/* Left Controls */}
+                <div className="flex items-center gap-2.5 sm:gap-3">
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       togglePlay();
                     }}
-                    className="p-1 text-[#F0F0ED] hover:text-white transition-transform hover:scale-110 cursor-pointer"
+                    className="p-1 hover:text-white/80 transition-transform active:scale-95 cursor-pointer"
                     aria-label={isPlaying ? 'Pause' : 'Play'}
                   >
                     {isPlaying ? (
-                      <Pause className="w-3.5 h-3.5 fill-[#F0F0ED]" />
+                      <Pause className="w-4 h-4 sm:w-5 sm:h-5 fill-white text-white" />
                     ) : (
-                      <Play className="w-3.5 h-3.5 fill-[#F0F0ED] translate-x-0.5" />
+                      <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white text-white ml-0.5" />
                     )}
                   </button>
 
-                  <span className="font-mono-tech text-[11px] sm:text-xs text-[#E0E0DC] tracking-wider select-none font-medium">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleMute(e);
+                    }}
+                    className="p-1 hover:text-white/80 transition-transform active:scale-95 cursor-pointer"
+                    aria-label={isMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {isMuted ? (
+                      <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+                    ) : (
+                      <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    )}
+                  </button>
+
+                  <span className="font-sans text-[11px] sm:text-xs text-white/90 tracking-normal select-none font-medium ml-1">
                     {formatVideoTime(currentTime)} / {formatVideoTime(duration)}
                   </span>
                 </div>
 
-                {/* Right Controls: Mute & Fullscreen */}
-                <div className="flex items-center gap-3 text-[#A1A1A1]">
-                  {isMuted && isPlaying && (
-                    <span
-                      onClick={toggleMute}
-                      className="hidden sm:inline font-mono-tech text-[10px] text-amber-300 tracking-wider cursor-pointer hover:underline"
-                    >
-                      MUTED (CLICK TO UNMUTE)
-                    </span>
-                  )}
+                {/* Right Controls: Fullscreen & YouTube Badge */}
+                <div className="flex items-center gap-2.5 sm:gap-3 text-white/90">
                   <button
-                    onClick={toggleMute}
-                    className="p-1 hover:text-[#F0F0ED] transition-colors cursor-pointer"
-                    aria-label={isMuted ? 'Unmute' : 'Mute'}
-                  >
-                    {isMuted ? (
-                      <VolumeX className="w-4 h-4 text-amber-400" />
-                    ) : (
-                      <Volume2 className="w-4 h-4" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={toggleFullscreen}
-                    className="p-1 hover:text-[#F0F0ED] transition-colors cursor-pointer"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFullscreen(e);
+                    }}
+                    className="p-1 hover:text-white transition-transform active:scale-95 cursor-pointer"
                     aria-label="Toggle Fullscreen"
                   >
-                    <Maximize className="w-3.5 h-3.5" />
+                    <Maximize className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
-                </div>
-              </div>
 
-              {/* Full Width Thin Progress Scrubber Bar */}
-              <div
-                onClick={handleSeek}
-                className="relative w-full h-[3px] hover:h-[5px] bg-white/20 transition-all cursor-pointer rounded-full overflow-hidden"
-              >
-                <div
-                  className="absolute top-0 left-0 h-full bg-[#F0F0ED] rounded-full transition-all duration-100"
-                  style={{ width: `${progress}%` }}
-                />
+                  {/* YouTube Logo Badge */}
+                  <div
+                    className="flex items-center gap-1 pl-1 select-none cursor-pointer hover:opacity-90 transition-opacity"
+                    title="YouTube Video Experience"
+                  >
+                    <div className="w-5 h-3.5 sm:w-6 sm:h-4 bg-[#FF0000] rounded-[3px] flex items-center justify-center shadow">
+                      <Play className="w-2 sm:w-2.5 h-2 sm:h-2.5 fill-white text-white ml-0.5" />
+                    </div>
+                    <span className="font-sans font-bold text-xs sm:text-sm tracking-tight text-white hidden xs:inline">
+                      YouTube
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

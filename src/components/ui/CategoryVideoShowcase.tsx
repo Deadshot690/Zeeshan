@@ -17,6 +17,9 @@ import {
   Monitor,
   CheckCircle2,
   LayoutGrid,
+  Settings,
+  Share2,
+  Check,
 } from 'lucide-react';
 import { ProjectMediaItem } from '@/types';
 import { soundManager } from '@/lib/sound';
@@ -32,6 +35,10 @@ function formatVideoTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+function pad2(num: number): string {
+  return String(num).padStart(2, '0');
 }
 
 export default function CategoryVideoShowcase({ items, categoryTitle }: CategoryVideoShowcaseProps) {
@@ -516,25 +523,62 @@ interface CinemaModalProps {
 
 function CinemaLightboxModal({ item, index, total, onClose, onNext, onPrev }: CinemaModalProps) {
   const modalVideoRef = useRef<HTMLVideoElement>(null);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
+  const hideControlsTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
   // Play immediately when item changes
   useEffect(() => {
     const video = modalVideoRef.current;
     if (!video) return;
     video.currentTime = 0;
-    video.play()
+    video.muted = isMuted;
+    video.volume = volume;
+    video
+      .play()
       .then(() => setIsPlaying(true))
       .catch(() => {
+        // Fallback to muted autoplay if browser blocks audio gesture
         video.muted = true;
         setIsMuted(true);
         video.play().then(() => setIsPlaying(true)).catch(() => {});
       });
   }, [item.id]);
+
+  // Auto-hide YouTube controls during playback on inactivity
+  const showControlsTemporarily = useCallback(() => {
+    setControlsVisible(true);
+    if (hideControlsTimerRef.current) {
+      clearTimeout(hideControlsTimerRef.current);
+    }
+    hideControlsTimerRef.current = setTimeout(() => {
+      if (isPlaying) {
+        setControlsVisible(false);
+      }
+    }, 2800);
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (!isPlaying) {
+      setControlsVisible(true);
+      if (hideControlsTimerRef.current) clearTimeout(hideControlsTimerRef.current);
+    } else {
+      showControlsTemporarily();
+    }
+    return () => {
+      if (hideControlsTimerRef.current) clearTimeout(hideControlsTimerRef.current);
+    };
+  }, [isPlaying, showControlsTemporarily]);
 
   const togglePlay = () => {
     const video = modalVideoRef.current;
@@ -542,16 +586,38 @@ function CinemaLightboxModal({ item, index, total, onClose, onNext, onPrev }: Ci
     if (isPlaying) {
       video.pause();
       setIsPlaying(false);
+      setControlsVisible(true);
     } else {
       video.play().then(() => setIsPlaying(true)).catch(() => {});
+      showControlsTemporarily();
     }
   };
 
   const toggleMute = () => {
     const video = modalVideoRef.current;
     if (!video) return;
-    video.muted = !isMuted;
-    setIsMuted(!isMuted);
+    const nextMuted = !isMuted;
+    video.muted = nextMuted;
+    setIsMuted(nextMuted);
+    if (!nextMuted && video.volume === 0) {
+      video.volume = 1;
+      setVolume(1);
+    }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVol = parseFloat(e.target.value);
+    const video = modalVideoRef.current;
+    if (!video) return;
+    setVolume(newVol);
+    video.volume = newVol;
+    if (newVol === 0) {
+      video.muted = true;
+      setIsMuted(true);
+    } else if (isMuted) {
+      video.muted = false;
+      setIsMuted(false);
+    }
   };
 
   const handleTimeUpdate = () => {
@@ -575,15 +641,54 @@ function CinemaLightboxModal({ item, index, total, onClose, onNext, onPrev }: Ci
     const rect = e.currentTarget.getBoundingClientRect();
     const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     video.currentTime = pos * (video.duration || duration);
+    setProgress(pos * 100);
   };
+
+  const toggleFullscreen = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!playerContainerRef.current) return;
+    if (!document.fullscreenElement) {
+      playerContainerRef.current.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (typeof window !== 'undefined') {
+      navigator.clipboard?.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    }
+  };
+
+  // Keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'k' || e.key === 'K') {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.key === 'm' || e.key === 'M') {
+        toggleMute();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPlaying, isMuted]);
 
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-2xl p-4 sm:p-6 md:p-10 select-none animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-2xl p-2 sm:p-6 md:p-10 select-none animate-fadeIn"
+      role="dialog"
+      aria-modal="true"
+      aria-label="YouTube Screening Room"
     >
-      {/* Background Ambient Glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30 filter blur-3xl scale-125">
+      {/* Background Dynamic Ambient Glow */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-25 filter blur-3xl scale-125">
         <Image
           src={item.thumbnailSrc}
           alt=""
@@ -593,132 +698,311 @@ function CinemaLightboxModal({ item, index, total, onClose, onNext, onPrev }: Ci
         />
       </div>
 
-      {/* Modal Main Box */}
+      {/* Close Button Top-Right of Modal */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 sm:top-6 sm:right-6 z-40 p-2 sm:p-2.5 rounded-full bg-black/70 hover:bg-white text-[#F0F0ED] hover:text-black border border-white/20 transition-all cursor-pointer shadow-2xl flex items-center gap-1.5 px-3 font-mono-tech text-xs tracking-wider"
+        title="Close screening (Esc)"
+      >
+        <span>CLOSE</span>
+        <X className="w-4 h-4" />
+      </button>
+
+      {/* Track Pill Top-Left */}
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-40 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/70 border border-white/15 text-xs font-mono-tech text-[#A1A1A1] pointer-events-none backdrop-blur-md">
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+        <span className="text-[#F0F0ED] font-bold">
+          TRACK {pad2(index + 1)} / {pad2(total)}
+        </span>
+        <span>•</span>
+        <span className="text-white/80">{item.tag || 'VIDEO EDIT'}</span>
+      </div>
+
+      {/* Main Screening Frame Container */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative z-10 w-full max-w-5xl flex flex-col items-center gap-4 max-h-[95vh]"
+        className="relative z-10 w-full flex items-center justify-center max-h-[92vh]"
       >
-        {/* Top Header Row: Track Info + Close Button */}
-        <div className="w-full flex items-center justify-between border-b border-white/10 pb-3 font-mono-tech text-xs">
-          <div className="flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[#F0F0ED] font-bold">
-              TRACK 0{index + 1} / 0{total}
-            </span>
-            <span className="text-[#777777] hidden sm:inline">//</span>
-            <span className="text-[#A1A1A1] hidden sm:inline font-sans-body truncate max-w-md">
-              {item.title}
-            </span>
-          </div>
+        {/* Previous Video Nav Arrow */}
+        <button
+          onClick={onPrev}
+          className="absolute left-2 sm:-left-6 lg:-left-12 z-40 p-2.5 sm:p-3 rounded-full bg-black/80 hover:bg-white text-[#F0F0ED] hover:text-black border border-white/20 transition-all cursor-pointer shadow-2xl hover:scale-110 active:scale-95"
+          title="Previous edit (Left Arrow)"
+        >
+          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
 
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full bg-white/10 hover:bg-white text-white hover:text-black transition-all cursor-pointer flex items-center gap-1.5 px-3 font-mono-tech text-xs"
-          >
-            <span>CLOSE</span>
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        {/* Realistic YouTube Player Box */}
+        <div
+          ref={playerContainerRef}
+          onMouseMove={showControlsTemporarily}
+          onMouseLeave={() => {
+            if (isPlaying) setControlsVisible(false);
+          }}
+          onClick={togglePlay}
+          className={`group/yt relative bg-black overflow-hidden shadow-[0_25px_80px_rgba(0,0,0,0.98)] cursor-pointer flex items-center justify-center transition-all ${
+            item.isVertical
+              ? 'w-full max-w-[410px] aspect-[9/16] h-[75vh] sm:h-[82vh] max-h-[820px] rounded-2xl border border-white/15'
+              : 'w-full max-w-5xl aspect-video max-h-[78vh] rounded-xl border border-white/15'
+          }`}
+        >
+          {/* Native Video Element */}
+          <video
+            ref={modalVideoRef}
+            src={item.videoSrc}
+            playsInline
+            loop
+            muted={isMuted}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+            className="w-full h-full object-contain bg-black"
+          />
 
-        {/* Center Screening Area */}
-        <div className="relative w-full flex items-center justify-center">
-          {/* Previous Video Nav Arrow */}
-          <button
-            onClick={onPrev}
-            className="absolute left-2 sm:-left-6 lg:-left-12 z-30 p-2.5 sm:p-3 rounded-full bg-black/70 hover:bg-white text-[#F0F0ED] hover:text-black border border-white/20 transition-all cursor-pointer shadow-2xl hover:scale-110"
-            title="Previous edit (Left Arrow)"
-          >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-
-          {/* Video Player Box */}
+          {/* Center Play Button Overlay (when paused) */}
           <div
-            onClick={togglePlay}
-            className={`relative rounded-xl border border-white/20 bg-black overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.95)] cursor-pointer flex items-center justify-center ${
-              item.isVertical
-                ? 'h-[65vh] sm:h-[72vh] md:h-[78vh] aspect-[9/16]'
-                : 'w-full aspect-video max-h-[75vh]'
+            className={`absolute inset-0 flex items-center justify-center transition-all duration-300 pointer-events-none z-20 ${
+              isPlaying ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
             }`}
           >
-            <video
-              ref={modalVideoRef}
-              src={item.videoSrc}
-              playsInline
-              loop
-              muted={isMuted}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              className="w-full h-full object-cover"
-            />
-
-            {/* Play Overlay if paused */}
-            {!isPlaying && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20 pointer-events-none">
-                <div className="w-16 h-16 rounded-full border border-white bg-white text-black flex items-center justify-center shadow-2xl scale-110">
-                  <Play className="w-7 h-7 ml-0.5 fill-current" />
-                </div>
-              </div>
-            )}
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/65 border border-white/30 backdrop-blur-md flex items-center justify-center text-white shadow-[0_0_35px_rgba(0,0,0,0.8)] scale-105">
+              <Play className="w-7 h-7 sm:w-8 sm:h-8 ml-1 fill-white text-white" />
+            </div>
           </div>
 
-          {/* Next Video Nav Arrow */}
-          <button
-            onClick={onNext}
-            className="absolute right-2 sm:-right-6 lg:-right-12 z-30 p-2.5 sm:p-3 rounded-full bg-black/70 hover:bg-white text-[#F0F0ED] hover:text-black border border-white/20 transition-all cursor-pointer shadow-2xl hover:scale-110"
-            title="Next edit (Right Arrow)"
+          {/* ------------------------------------------------------------- */}
+          {/* YOUTUBE TOP HEADER OVERLAY (Channel info, title, top controls) */}
+          {/* ------------------------------------------------------------- */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`absolute top-0 inset-x-0 pt-3 sm:pt-4 pb-12 px-3 sm:px-6 bg-gradient-to-b from-black/85 via-black/40 to-transparent flex items-center justify-between z-30 transition-opacity duration-300 ${
+              controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+            }`}
           >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-        </div>
-
-        {/* Integrated Bottom Cinema Bar */}
-        <div className="w-full max-w-2xl bg-black/80 backdrop-blur-md rounded-lg border border-white/10 p-3 sm:p-4 flex flex-col gap-2.5">
-          <div className="flex items-center justify-between text-xs font-mono-tech text-[#E0E0DC]">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={togglePlay}
-                className="p-1 hover:text-white transition-transform hover:scale-110 cursor-pointer"
-              >
-                {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
-              </button>
-              <span>
-                {formatVideoTime(currentTime)} / {formatVideoTime(duration || 1)}
-              </span>
+            {/* Channel Avatar & Title */}
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-3">
+              <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-white/30 flex-shrink-0 bg-neutral-900 shadow-md">
+                <Image
+                  src="/assets/branding/zeeshan.jpg"
+                  alt="Zeeshan"
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs sm:text-sm md:text-base font-semibold text-white truncate drop-shadow-md leading-tight">
+                  {item.title}
+                </span>
+                <span className="text-[10px] sm:text-xs text-[#DDDDDD] font-normal truncate mt-0.5">
+                  Zeeshan • Video Editor & VFX Artist
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* Top Right Controls: Volume, CC, Settings */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-white/90">
               <button
+                type="button"
                 onClick={toggleMute}
-                className="p-1 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
+                className="p-1 sm:p-1.5 hover:text-white transition-colors cursor-pointer"
+                title={isMuted ? 'Unmute' : 'Mute'}
               >
                 {isMuted ? (
-                  <>
-                    <VolumeX className="w-4 h-4 text-amber-400" />
-                    <span className="text-[10px] text-amber-400 hidden sm:inline">MUTED</span>
-                  </>
+                  <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
                 ) : (
-                  <Volume2 className="w-4 h-4 text-[#F0F0ED]" />
+                  <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
                 )}
               </button>
+
+              <div
+                className="px-1.5 py-0.5 rounded border border-white/70 text-[9px] sm:text-[10px] font-bold text-white tracking-wider select-none"
+                title="Subtitles / Closed Captions"
+              >
+                CC
+              </div>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                  className="p-1 sm:p-1.5 hover:text-white transition-transform hover:rotate-45 cursor-pointer"
+                  title="Quality Settings"
+                >
+                  <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+
+                {/* Quality Popover */}
+                {isSettingsOpen && (
+                  <div className="absolute right-0 top-8 w-44 rounded-lg bg-black/90 border border-white/20 p-2.5 text-xs text-[#E0E0DC] backdrop-blur-xl shadow-2xl flex flex-col gap-1.5 z-40 font-mono-tech">
+                    <div className="text-[10px] uppercase text-[#777777] border-b border-white/10 pb-1">
+                      Play Quality
+                    </div>
+                    <div className="flex items-center justify-between text-emerald-400 font-bold py-0.5">
+                      <span>{item.resolution || '4K 2160p (60fps)'}</span>
+                      <Check className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="text-white/60 text-[10px]">HDR / Rec.709 Master</div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Scrubber */}
+          {/* ------------------------------------------------------------- */}
+          {/* YOUTUBE BOTTOM PLAYER CONTROLS (Red bar, time, icons, logo)   */}
+          {/* ------------------------------------------------------------- */}
           <div
-            onClick={handleSeek}
-            className="relative w-full h-[4px] hover:h-[6px] bg-white/20 rounded-full overflow-hidden cursor-pointer transition-all"
+            onClick={(e) => e.stopPropagation()}
+            className={`absolute bottom-0 inset-x-0 pt-12 pb-2.5 sm:pb-3 px-3 sm:px-5 bg-gradient-to-t from-black/95 via-black/55 to-transparent flex flex-col gap-1.5 z-30 transition-opacity duration-300 ${
+              controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+            }`}
           >
+            {/* Signature YouTube Red Scrubber Bar with Expanding Red Thumb */}
             <div
-              className="absolute top-0 left-0 h-full bg-[#F0F0ED] rounded-full"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+              onClick={handleSeek}
+              className="group/scrub relative w-full h-[3px] hover:h-[5px] bg-white/25 cursor-pointer transition-all flex items-center py-1"
+            >
+              {/* Buffered Track */}
+              <div
+                className="absolute left-0 top-1 bottom-1 bg-white/40 rounded-full"
+                style={{ width: `${Math.min(100, progress + 25)}%` }}
+              />
 
-          <div className="flex items-center justify-between text-[10px] font-mono-tech text-[#777777]">
-            <span className="truncate max-w-xs">{item.title}</span>
-            <span>PRESS SPACE TO PLAY/PAUSE • ESC TO CLOSE</span>
+              {/* Played Track (Vibrant YouTube Red #FF0000) */}
+              <div
+                className="absolute left-0 top-1 bottom-1 bg-[#FF0000] rounded-full"
+                style={{ width: `${progress}%` }}
+              />
+
+              {/* Red YouTube Scrub Thumb */}
+              <div
+                className="absolute w-3 h-3 sm:w-3.5 sm:h-3.5 bg-[#FF0000] rounded-full -translate-x-1/2 shadow transition-transform scale-0 group-hover/scrub:scale-100"
+                style={{ left: `${progress}%` }}
+              />
+            </div>
+
+            {/* Bottom Controls Row: Play/Pause, Vol, Time, Share, Fullscreen, Logo */}
+            <div className="flex items-center justify-between text-white font-sans text-xs">
+              {/* Left Controls: Play/Pause, Next Track, Volume, Timecode */}
+              <div className="flex items-center gap-1.5 sm:gap-3">
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  className="p-1 sm:p-1.5 hover:text-white/80 transition-transform active:scale-95 cursor-pointer"
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
+                >
+                  {isPlaying ? (
+                    <Pause className="w-4 h-4 sm:w-5 sm:h-5 fill-white text-white" />
+                  ) : (
+                    <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white text-white ml-0.5" />
+                  )}
+                </button>
+
+                {/* Next Track Button */}
+                <button
+                  type="button"
+                  onClick={onNext}
+                  className="p-1 sm:p-1.5 hover:text-white/80 transition-transform active:scale-95 cursor-pointer"
+                  title="Next edit"
+                >
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </button>
+
+                {/* Volume Button with Hover Slider */}
+                <div
+                  onMouseEnter={() => setShowVolumeSlider(true)}
+                  onMouseLeave={() => setShowVolumeSlider(false)}
+                  className="flex items-center gap-1.5"
+                >
+                  <button
+                    type="button"
+                    onClick={toggleMute}
+                    className="p-1 sm:p-1.5 hover:text-white/80 transition-transform active:scale-95 cursor-pointer"
+                    aria-label={isMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {isMuted ? (
+                      <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+                    ) : (
+                      <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    )}
+                  </button>
+
+                  {/* Desktop Smooth Volume Slider on Hover */}
+                  <div
+                    className={`hidden sm:flex items-center transition-all duration-200 overflow-hidden ${
+                      showVolumeSlider ? 'w-16 opacity-100' : 'w-0 opacity-0 pointer-events-none'
+                    }`}
+                  >
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={isMuted ? 0 : volume}
+                      onChange={handleVolumeChange}
+                      className="w-16 h-1 bg-white/40 accent-[#FF0000] cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Timecode */}
+                <span className="font-sans text-[11px] sm:text-xs text-white/90 select-none ml-1 tabular-nums font-medium">
+                  {formatVideoTime(currentTime)} / {formatVideoTime(duration || 1)}
+                </span>
+              </div>
+
+              {/* Right Controls: Share, Fullscreen & Official YouTube Badge */}
+              <div className="flex items-center gap-1.5 sm:gap-3 text-white/90">
+                {/* Share Button */}
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="p-1 sm:p-1.5 hover:text-white transition-transform active:scale-95 cursor-pointer hidden sm:flex items-center gap-1.5"
+                  title="Share link"
+                >
+                  <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  {copied ? (
+                    <span className="text-[10px] text-emerald-400 font-mono font-bold">COPIED!</span>
+                  ) : (
+                    <span className="text-[11px] hidden md:inline">Share</span>
+                  )}
+                </button>
+
+                {/* Fullscreen Button */}
+                <button
+                  type="button"
+                  onClick={toggleFullscreen}
+                  className="p-1 sm:p-1.5 hover:text-white transition-transform active:scale-95 cursor-pointer"
+                  title="Fullscreen"
+                >
+                  <Maximize className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+
+                {/* Official YouTube Logo Badge */}
+                <div
+                  className="flex items-center gap-1 pl-1 select-none cursor-pointer hover:opacity-90 transition-opacity"
+                  title="YouTube Player Experience"
+                >
+                  <div className="w-5 h-3.5 sm:w-6 sm:h-4 bg-[#FF0000] rounded-[3px] flex items-center justify-center shadow">
+                    <Play className="w-2 sm:w-2.5 h-2 sm:h-2.5 fill-white text-white ml-0.5" />
+                  </div>
+                  <span className="font-sans font-bold text-xs sm:text-sm tracking-tight text-white hidden xs:inline">
+                    YouTube
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Next Video Nav Arrow */}
+        <button
+          onClick={onNext}
+          className="absolute right-2 sm:-right-6 lg:-right-12 z-40 p-2.5 sm:p-3 rounded-full bg-black/80 hover:bg-white text-[#F0F0ED] hover:text-black border border-white/20 transition-all cursor-pointer shadow-2xl hover:scale-110 active:scale-95"
+          title="Next edit (Right Arrow)"
+        >
+          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
       </div>
     </div>
   );
